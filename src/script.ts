@@ -743,17 +743,18 @@ class Rect {
 		}
 
 		renderNoteLyrics() {
+			//* Commented out b/c never used and causes errors - Hri7566
 			// render lyric
-			for(var part_id in this.noteLyrics) {
-				if(!this.noteLyrics.hasOwnProperty(i)) continue;
-				var lyric = this.noteLyrics[part_id];
-				var lyric_x = x;
-				var lyric_y = this.whiteKeyHeight + 1;
-				this.ctx.fillStyle = key.lyric.color;
-				var alpha = this.ctx.globalAlpha;
-				this.ctx.globalAlpha = alpha - ((now - key.lyric.time) / 1000);
-				this.ctx.fillRect(x, y, 10, 10);
-			}
+			// for(var part_id in this.noteLyrics) {
+			// 	if(!this.noteLyrics.hasOwnProperty(i)) continue;
+			// 	var lyric = this.noteLyrics[part_id];
+			// 	var lyric_x = x;
+			// 	var lyric_y = this.whiteKeyHeight + 1;
+			// 	this.ctx.fillStyle = key.lyric.color;
+			// 	var alpha = this.ctx.globalAlpha;
+			// 	this.ctx.globalAlpha = alpha - ((now - key.lyric.time) / 1000);
+			// 	this.ctx.fillRect(x, y, 10, 10);
+			// }
 		}
 
 		isSupported() {
