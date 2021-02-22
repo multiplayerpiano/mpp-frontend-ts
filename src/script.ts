@@ -1856,13 +1856,13 @@ class Rect {
 ////////////////////////////////////////////////////////////////
 
 interface NotificationInput {
-	id: string,
-	title: string,
-	text: string,
-	html: string,
-	// TODO: maybe target shouldn't be any
-	target: any,
-	duration: number
+	id?: string,
+	title?: string,
+	text?: string,
+	// TODO: maybe target and html shouldn't be any
+	html?: any,
+	target?: any,
+	duration?: number
 }
 
 class Notification extends EventEmitter {
