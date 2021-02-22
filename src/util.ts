@@ -83,7 +83,7 @@ class Knob extends EventEmitter {
 	radius: number;
 	baseImage: HTMLCanvasElement;
 
-	constructor (canvas: HTMLCanvasElement, min: number, max: number, step: number, value: number, name: string, unit: string) {
+	constructor (canvas: HTMLCanvasElement, min?: number, max?: number, step?: number, value?: number, name?: string, unit?: string) {
 		super();
 		this.min = min || 0;
 		this.max = max || 10;

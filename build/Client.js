@@ -15,6 +15,7 @@ var Client = /** @class */ (function (_super) {
     __extends(Client, _super);
     function Client(uri) {
         var _this = _super.call(this) || this;
+        _this.offlineChannelSettings = { color: "#ecfaed" };
         _this.uri = uri;
         _this.ws = undefined;
         _this.serverTimeOffset = 0;
@@ -263,6 +264,15 @@ var Client = /** @class */ (function (_super) {
             if (update.name)
                 part.name = update.name;
         }
+    };
+    Client.prototype.preventsPlaying = function () {
+        return this.isConnected() && !this.isOwner() && this.getChannelSetting("crownsolo") === true;
+    };
+    Client.prototype.getChannelSetting = function (key) {
+        if (!this.isConnected() || !this.channel || !this.channel.settings) {
+            return this.offlineChannelSettings[key];
+        }
+        return this.channel.settings[key];
     };
     Client.prototype.countParticipants = function () {
         var count = 0;

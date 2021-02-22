@@ -1,8 +1,23 @@
+interface MIDIPort {
+	id: string;
+	manufacturer?: string;
+	name?: string;
+	type: string;
+	version?: string;
+	state: string;
+	connection: string;
+	onstatechange: Function;
+};
+
+interface MIDIConnectionEvent {
+    port: MIDIPort;
+};
+
 $(function() {
-	var test_mode = (window.location.hash && window.location.hash.match(/^(?:#.+)*#test(?:#.+)*$/i));
-	var gSeeOwnCursor = (window.location.hash && window.location.hash.match(/^(?:#.+)*#seeowncursor(?:#.+)*$/i));
-	var gMidiVolumeTest = (window.location.hash && window.location.hash.match(/^(?:#.+)*#midivolumetest(?:#.+)*$/i));
-	var gMidiOutTest;
+	var test_mode = <RegExpMatchArray> (window.location.hash && window.location.hash.match(/^(?:#.+)*#test(?:#.+)*$/i));
+	var gSeeOwnCursor = <RegExpMatchArray> (window.location.hash && window.location.hash.match(/^(?:#.+)*#seeowncursor(?:#.+)*$/i));
+	var gMidiVolumeTest = <RegExpMatchArray> (window.location.hash && window.location.hash.match(/^(?:#.+)*#midivolumetest(?:#.+)*$/i));
+	var gMidiOutTest: RegExpMatchArray;
 
 	if (!Array.prototype.indexOf) {
 		Array.prototype.indexOf = function(elt /*, from*/) {
@@ -440,7 +455,7 @@ class Rect {
 		blackBlipX: number;
 		whiteKeyRender: HTMLCanvasElement;
 		blackKeyRender: HTMLCanvasElement;
-		shadowRender: Array<any>;
+		shadowRender: Array<HTMLCanvasElement>;
 		// TODO: make NoteLyric interface/class
 		noteLyrics: any;
 		
@@ -647,7 +662,8 @@ class Rect {
 			// draw all keys
 			for(var j = 0; j < 2; j++) {
 				this.ctx.globalAlpha = 1.0;
-				this.ctx.drawImage(this.shadowRender[j], 0, 0);
+				if (typeof(this.shadowRender) !== 'undefined')
+					this.ctx.drawImage(this.shadowRender[j], 0, 0);
 				var sharp = j ? true : false;
 				for(var i in this.piano.keys) {
 					if(!this.piano.keys.hasOwnProperty(i)) continue;
@@ -667,8 +683,17 @@ class Rect {
 					}
 					var x = Math.floor(key.sharp ? this.blackKeyOffset + this.whiteKeyWidth * key.spatial
 						: this.whiteKeyWidth * key.spatial);
-					var image = key.sharp ? this.blackKeyRender : this.whiteKeyRender;
-					this.ctx.drawImage(image, x, y);
+					var image: HTMLCanvasElement;
+					if (key.sharp == true) {
+						image = this.blackKeyRender;
+					} else {
+						image = this.whiteKeyRender;
+					}
+					try {
+						this.ctx.drawImage(image, x, y);
+					} catch (err) {
+
+					}
 
 					// render blips
 					if(key.blips.length) {
@@ -770,7 +795,7 @@ class Rect {
 	class SoundSelector {
 		initialized: boolean;
 		keys: any; // TODO: make this not any
-		loading: any; // TODO: same thing ^
+		loading: Array<boolean>;
 		notification: Notification;
 		packs: Array<any> // TODO: fix any here as well
 		piano: any;
@@ -783,6 +808,7 @@ class Rect {
 			this.packs = [];
 			this.piano = piano;
 			this.soundSelection = localStorage.soundSelection ? localStorage.soundSelection : "MPP Classic";
+			this.loading = [];
 			this.addPack({name: "MPP Classic", keys: Object.keys(this.piano.keys), ext: ".mp3", url: "/sounds/mppclassic/"});
 		}
 
@@ -804,7 +830,7 @@ class Rect {
 				if (obj.url.substr(obj.url.length-1) != "/") obj.url = obj.url + "/";
 				var html = document.createElement("li");
 				// html.cassList = "pack";
-				html.classList.add("pack"); // Changed to add - Hri7566
+				html.classList.add("pack"); //* Changed to add - Hri7566
 				html.innerText = obj.name + " (" + obj.keys.length + " keys)";
 				html.onclick = function() {
 					self.loadPack(obj.name);
@@ -980,7 +1006,7 @@ class Rect {
 		if(!this.keys.hasOwnProperty(note) || !participant) return;
 		var key = this.keys[note];
 		if(key.loaded) this.audio.play(key.note, vol, delay_ms, participant.id);
-		if(gMidiOutTest) gMidiOutTest(key.note, vol * 100, delay_ms);
+		if(gMidiOutTest) (<any>window).gMidiOutTest(key.note, vol * 100, delay_ms);
 		var self = this;
 		setTimeout(function() {
 			self.renderer.visualize(key, participant.color);
@@ -999,7 +1025,7 @@ class Rect {
 		if(!this.keys.hasOwnProperty(note)) return;
 		var key = this.keys[note];
 		if(key.loaded) this.audio.stop(key.note, delay_ms, participant.id);
-		if(gMidiOutTest) gMidiOutTest(key.note, 0, delay_ms);
+		if(gMidiOutTest) (<any>window).gMidiOutTest(key.note, 0, delay_ms);
 	};
 	
 	var gPiano = new Piano(document.getElementById("piano"));
@@ -1022,7 +1048,7 @@ class Rect {
 	
 
 	function press(id, vol?) {
-		if(!gClient.preventsPlaying() && gNoteQuota.spend(1)) {
+		if(!(<any>window).gClient.preventsPlaying() && (<any>window).gNoteQuota.spend(1)) {
 			gHeldNotes[id] = true;
 			gSustainedNotes[id] = true;
 			gPiano.play(id, vol !== undefined ? vol : DEFAULT_VELOCITY, gClient.getOwnParticipant(), 0);
@@ -1135,7 +1161,8 @@ class Rect {
 			$(part.nameDiv).fadeIn(2000);
 
 			// sort names
-			var arr = $("#names .name");
+			var arr: any; // TODO: find a way to make this some sort of JQuery array instead of any
+			arr = $("#names .name");
 			arr.sort(function(a, b) {
 				a = a.style.backgroundColor; // todo: sort based on user id instead
 				b = b.style.backgroundColor;
@@ -1147,13 +1174,13 @@ class Rect {
 
 			// add cursorDiv
 			if(gClient.participantId !== part.id || gSeeOwnCursor) {
-				var div = document.createElement("div");
+				div = document.createElement("div"); //* Removed 'var' keyword, div was already defined above, hopefully this works - Hri7566
 				div.className = "cursor";
 				div.style.display = "none";
 				part.cursorDiv = $("#cursors")[0].appendChild(div);
 				$(part.cursorDiv).fadeIn(2000);
 
-				var div = document.createElement("div");
+				div = document.createElement("div"); //* same thing as line 1151 - Hri7566
 				div.className = "name";
 				div.style.backgroundColor = part.color || "#777"
 				div.textContent = part.name || "";
@@ -1306,7 +1333,14 @@ class Rect {
 	});
 
 	// Send cursor updates
-	var mx = 0, last_mx = -10, my = 0, last_my = -10;
+	var mx: number;
+	var last_mx: number;
+	var my: number;
+	var last_my: number;
+	mx = 0;
+	last_mx = -10;
+	my = 0
+	last_my = -10;
 	setInterval(function() {
 		if(Math.abs(mx - last_mx) > 0.1 || Math.abs(my - last_my) > 0.1) {
 			last_mx = mx;
@@ -1322,11 +1356,10 @@ class Rect {
 			}
 		}
 	}, 50);
-	$(document).mousemove(function(event) {
-		mx = ((event.pageX / $(window).width()) * 100).toFixed(2);
-		my = ((event.pageY / $(window).height()) * 100).toFixed(2);
+	$(document).on('mousemove', event => { //! ANCHOR - Changed from .mousemove() to .on('mousemove') - Hri7566
+		mx = parseFloat(((event.pageX / $(window).width()) * 100).toFixed(2));
+		my = parseFloat(((event.pageY / $(window).height()) * 100).toFixed(2));
 	});
-
 
 	// Room settings button
 	(function() {
@@ -1501,8 +1534,8 @@ class Rect {
 	
 
 
-
-	var volume_slider = document.getElementById("volume-slider");
+	var volume_slider: any; // TODO: make this not any
+	volume_slider = document.getElementById("volume-slider");
 	volume_slider.value = gPiano.audio.volume;
 	$("#volume-label").text("Volume: " + Math.floor(gPiano.audio.volume * 100) + "%");
 	volume_slider.addEventListener("input", function(evt) {
@@ -1512,17 +1545,12 @@ class Rect {
 		$("#volume-label").text("Volume: " + Math.floor(v * 100) + "%");
 	});
 
-
-
-
 	var Note = function(note, octave) {
 		this.note = note;
 		this.octave = octave || 0;
 	};
 
-
-
-	var n = function(a, b) { return {note: new Note(a, b), held: false}; };
+	var n = function(a: string, b?: number) { return {note: new Note(a, b), held: false}; };
 	var key_binding = {
 		65: n("gs"),
 		90: n("a"),
@@ -1572,9 +1600,10 @@ class Rect {
 
 	var transpose_octave = 0;
 	
-	function handleKeyDown(evt) {
+	function handleKeyDown(evt: KeyboardEvent) {
 		//console.log(evt);
-		var code = parseInt(evt.keyCode);
+		var code: number;
+		code = parseInt(<any>evt.keyCode); //! Deprecated - Hri7566
 		if(key_binding[code] !== undefined) {
 			var binding = key_binding[code];
 			if(!binding.held) {
@@ -1591,9 +1620,9 @@ class Rect {
 
 			if(++gKeyboardSeq == 3) {
 				gKnowsYouCanUseKeyboard = true;
-				if(window.gKnowsYouCanUseKeyboardTimeout) clearTimeout(gKnowsYouCanUseKeyboardTimeout);
+				if((<any>window).gKnowsYouCanUseKeyboardTimeout) clearTimeout((<any>window).gKnowsYouCanUseKeyboardTimeout);
 				if(localStorage) localStorage.knowsYouCanUseKeyboard = true;
-				if(window.gKnowsYouCanUseKeyboardNotification) gKnowsYouCanUseKeyboardNotification.close();
+				if((<any>window).gKnowsYouCanUseKeyboardNotification) (<any>window).gKnowsYouCanUseKeyboardNotification.close();
 			}
 
 			evt.preventDefault();
@@ -1617,8 +1646,9 @@ class Rect {
 		}
 	};
 
-	function handleKeyUp(evt) {
-		var code = parseInt(evt.keyCode);
+	function handleKeyUp(evt: KeyboardEvent) {
+		var code: number;
+		var code = parseInt(<any>evt.keyCode); //! Also deprecated - Hri7566
 		if(key_binding[code] !== undefined) {
 			var binding = key_binding[code];
 			if(binding.held) {
@@ -1660,14 +1690,14 @@ class Rect {
 	function captureKeyboard() {
 		$("#piano").off("mousedown", recapListener);
 		$("#piano").off("touchstart", recapListener);
-		$(document).on("keydown", handleKeyDown );
-		$(document).on("keyup", handleKeyUp);
+		$(document).on(<any>"keydown", handleKeyDown ); //! These two lines had an error, so I added any (might be a bad idea) - Hri7566
+		$(document).on(<any>"keyup", handleKeyUp);
 		$(window).on("keypress", handleKeyPress );
 	};
 
 	function releaseKeyboard() {
-		$(document).off("keydown", handleKeyDown );
-		$(document).off("keyup", handleKeyUp);
+		$(document).off(<any>"keydown", <any>handleKeyDown ); //! I did it here, too - Hri7566
+		$(document).off(<any>"keyup", <any>handleKeyUp);
 		$(window).off("keypress", handleKeyPress );
 		$("#piano").on("mousedown", recapListener);
 		$("#piano").on("touchstart", recapListener);
@@ -1844,7 +1874,8 @@ class Rect {
 				});
 				$('<div class="menu-item kickban">Kickban</div>').appendTo(menu)
 				.on("mousedown touchstart", function(evt) {
-					var minutes = prompt("How many minutes? (0-60)", "30");
+					var minutes: number | string;
+					minutes = prompt("How many minutes? (0-60)", "30");
 					if(minutes === null) return;
 					minutes = parseFloat(minutes) || 0;
 					var ms = minutes * 60 * 1000;
@@ -1946,6 +1977,10 @@ class Notification extends EventEmitter {
 		return this;
 	}
 
+	onresize() { // Keep this blank - Hri7566
+
+	}
+
 	position() {
 		var pos = this.target.offset();
 		var x = pos.left - (this.domElement.width() / 2) + (this.target.width() / 4);
@@ -1966,23 +2001,7 @@ class Notification extends EventEmitter {
 			self.emit("close");
 		});
 	};
-	}
 }
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // set variables from settings or set settings
 
@@ -1992,26 +2011,19 @@ class Notification extends EventEmitter {
 	var gKnowsYouCanUseKeyboard = false;
 	if(localStorage && localStorage.knowsYouCanUseKeyboard) gKnowsYouCanUseKeyboard = true;
 	if(!gKnowsYouCanUseKeyboard) {
-		window.gKnowsYouCanUseKeyboardTimeout = setTimeout(function() {
-			window.gKnowsYouCanUseKeyboardNotification = new Notification({title: "Did you know!?!",
-				text: "You can play the piano with your keyboard, too.  Try it!", target: "#piano", duration: 10000});
-		}, 30000);
+		(<any>window).gKnowsYouCanUseKeyboardTimeout = setTimeout(function() {
+			(<any>window).gKnowsYouCanUseKeyboardNotification = new Notification({title: "Did you know!?!", text: "You can play the piano with your keyboard, too.  Try it!", target: "#piano", duration: 10000});}, 30000);
 	}
 
-
-
-
 	if(window.localStorage) {
-
 		if(localStorage.volume) {
 			volume_slider.value = localStorage.volume;
 			gPiano.audio.setVolume(localStorage.volume);
 			$("#volume-label").text("Volume: " + Math.floor(gPiano.audio.volume * 100) + "%");
-		}
-		else localStorage.volume = gPiano.audio.volume;
+		} else localStorage.volume = gPiano.audio.volume;
 
-		window.gHasBeenHereBefore = (localStorage.gHasBeenHereBefore || false);
-		if(gHasBeenHereBefore) {
+		(<any>window).gHasBeenHereBefore = (localStorage.gHasBeenHereBefore || false);
+		if((<any>window).gHasBeenHereBefore) {
 		}
 		localStorage.gHasBeenHereBefore = true;
 		
@@ -2025,7 +2037,7 @@ class Notification extends EventEmitter {
 	var user_interact = function(evt) {
 		document.removeEventListener("click", user_interact);
 		closeModal();
-		MPP.piano.audio.resume();
+		(<any>window).MPP.piano.audio.resume();
 	}
 	document.addEventListener("click", user_interact);
 
@@ -2128,7 +2140,7 @@ class Notification extends EventEmitter {
 			new Notification({id: "share", title: "Playing alone", html: 'You are playing alone in a room by yourself, but you can always invite \
 				friends by sending them the link.<br/><br/>\
 				<a href="#" onclick="window.open(\'https://www.facebook.com/sharer/sharer.php?u=\'+encodeURIComponent(location.href),\'facebook-share-dialog\',\'width=626,height=436\');return false;">Share on Facebook</a><br/><br/>\
-				<a href="http://web.archive.org/web/20200825094242/http://twitter.com/home?status='+encodeURIComponent(location.href)+'" target="_blank">Tweet</a>', duration: 25000});
+				<a href="http://twitter.com/home?status='+encodeURIComponent(location.href)+'" target="_blank">Tweet</a>', duration: 25000});
 		}, 1000);
 	});
 
@@ -2173,7 +2185,7 @@ class Notification extends EventEmitter {
 
 	(function() {
 		function submit() {
-			var name = $("#new-room .text[name=name]").val();
+			var name = <string> $("#new-room .text[name=name]").val();
 			var settings = {
 				visible: $("#new-room .checkbox[name=visible]").is(":checked"),
 				chat: true
@@ -2211,7 +2223,7 @@ class Notification extends EventEmitter {
 
 
 
-	function changeRoom(name, direction?, settings?, push?) {
+	function changeRoom(name: string, direction?: string, settings?, push?: boolean) {
 		if(!settings) settings = {};
 		if(!direction) direction = "right";
 		if(typeof push == "undefined") push = true;
@@ -2224,7 +2236,7 @@ class Notification extends EventEmitter {
 			if(window.history && history.pushState) {
 				history.pushState({"depth": gHistoryDepth += 1, "name": name}, "Piano > " + name, url);
 			} else {
-				window.location = url;
+				window.location.href = url;
 				return;
 			}
 		}
@@ -2245,7 +2257,7 @@ class Notification extends EventEmitter {
 	};
 
 	var gHistoryDepth = 0;
-	$(window).on("popstate", function(evt) {
+	$(window).on("popstate", function(evt: any) { //! Find a way to make this not any - Hri7566
 		var depth = evt.state ? evt.state.depth : 0;
 		if(depth == gHistoryDepth) return; // <-- forgot why I did that though...
 		
@@ -2256,25 +2268,6 @@ class Notification extends EventEmitter {
 		if(name.substr(0, 1) == "/") name = name.substr(1);
 		changeRoom(name, direction, null, false);
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Rename
 
@@ -2359,19 +2352,19 @@ class Notification extends EventEmitter {
 			chat.scrollToBottom();
 		});*/
 		$(document).mousedown(function(evt) {
-			if(!$("#chat").has(evt.target).length > 0) {
+			if(!($("#chat").has(<any>evt.target).length > 0)) { //! make this not any - Hri7566
 				chat.blur();
 			}
 		});
 		document.addEventListener("touchstart", function(event) {
 			for(var i in event.changedTouches) {
 				var touch = event.changedTouches[i];
-				if(!$("#chat").has(touch.target).length > 0) {
+				if(!($("#chat").has(<any>touch.target).length > 0)) { //! same thing here - Hri7566
 					chat.blur();
 				}
 			}
 		});
-		$(document).on("keydown", function(evt) {
+		$(document).on("keydown", function(evt) { // TODO keycode deprecations - Hri7566
 			if($("#chat").hasClass("chatting")) {
 				if(evt.keyCode == 27) {
 					chat.blur();
@@ -2386,8 +2379,8 @@ class Notification extends EventEmitter {
 		});
 		$("#chat input").on("keydown", function(evt) {
 			if(evt.keyCode == 13) {
-				if(MPP.client.isConnected()) {
-					var message = $(this).val();
+				if((<any>window).MPP.client.isConnected()) {
+					var message = <string> $(this).val();
 					if(message.length == 0) {
 						setTimeout(function() {
 							chat.blur();
@@ -2454,7 +2447,7 @@ class Notification extends EventEmitter {
 
 				$("#chat ul").append(li);
 
-				var eles = $("#chat ul li").get();
+				var eles = <Array<any>> $("#chat ul li").get(); // TODO: Make this not any
 				for(var i = 1; i <= 50 && i <= eles.length; i++) {
 					eles[eles.length - i].style.opacity = 1.0 - (i * 0.03);
 				}
@@ -2513,8 +2506,8 @@ class Notification extends EventEmitter {
 
 	(function() {
 
-		if (navigator.requestMIDIAccess) {
-			navigator.requestMIDIAccess().then(
+		if ((<any>navigator).requestMIDIAccess) {
+			(<any>navigator).requestMIDIAccess().then(
 				function(midi) {
 					console.log(midi);
 					function midimessagehandler(evt) {
@@ -2611,7 +2604,7 @@ class Notification extends EventEmitter {
 								}
 								console.log("output", output);
 							}
-							gMidiOutTest = function(note_name, vel, delay_ms) {
+							(<any>window).gMidiOutTest = function(note_name, vel, delay_ms) {
 								var note_number = MIDI_KEY_NAMES.indexOf(note_name);
 								if(note_number == -1) return;
 								note_number = note_number + 9 - MIDI_TRANSPOSE;
@@ -2632,10 +2625,10 @@ class Notification extends EventEmitter {
 						updateDevices();
 					}
 
-					midi.addEventListener("statechange", function(evt) {
-						if(evt instanceof MIDIConnectionEvent) {
+					midi.addEventListener("statechange", (evt: MIDIConnectionEvent) => {
+						//if(evt instanceof MIDIConnectionEvent) { // TODO this isn't fully supported
 							plug();
-						}
+						//}
 					});
 
 					plug();
@@ -2651,7 +2644,7 @@ class Notification extends EventEmitter {
 							var inputs = midi.inputs.values();
 							for(var input_it = inputs.next(); input_it && !input_it.done; input_it = inputs.next()) {
 								var input = input_it.value;
-								var li = document.createElement("li");
+								var li = <any> document.createElement("li"); // TODO: make this not any - hri
 								li.connectionId = input.id;
 								li.classList.add("connection");
 								if(input.enabled) li.classList.add("enabled");
@@ -2670,8 +2663,10 @@ class Notification extends EventEmitter {
 									}
 								});
 								if(gMidiVolumeTest) {
-									var knob = document.createElement("canvas");
-									mixin(knob, {width: 16 * window.devicePixelRatio, height: 16 * window.devicePixelRatio, className: "knob"});
+									var knob = <any> document.createElement("canvas"); // TODO: this uses any for now, change it later
+									knob.width = 16 * window.devicePixelRatio;
+									knob.height = 16 * window.devicePixelRatio;
+									knob.className = "knob";
 									li.appendChild(knob);
 									knob = new Knob(knob, 0, 2, 0.01, input.volume, "volume");
 									knob.canvas.style.width = "16px";
@@ -2692,7 +2687,8 @@ class Notification extends EventEmitter {
 							var outputs = midi.outputs.values();
 							for(var output_it = outputs.next(); output_it && !output_it.done; output_it = outputs.next()) {
 								var output = output_it.value;
-								var li = document.createElement("li");
+								var li: any;
+								li = document.createElement("li");
 								li.connectionId = output.id;
 								li.classList.add("connection");
 								if(output.enabled) li.classList.add("enabled");
@@ -2711,7 +2707,8 @@ class Notification extends EventEmitter {
 									}
 								});
 								if(gMidiVolumeTest) {
-									var knob = document.createElement("canvas");
+									var knob: Knob | any;
+									knob = document.createElement("canvas");
 									mixin(knob, {width: 16 * window.devicePixelRatio, height: 16 * window.devicePixelRatio, className: "knob"});
 									li.appendChild(knob);
 									knob = new Knob(knob, 0, 2, 0.01, output.volume, "volume");
@@ -2737,7 +2734,7 @@ class Notification extends EventEmitter {
 						h1.textContent = "Outputs";
 						div.appendChild(h1);
 						div.appendChild(outputs_ul);
-						connectionsNotification = new Notification({"id":"MIDI-Connections", "title":"MIDI Connections","duration":sticky?"-1":"4500","html":div,"target":"#midi-btn"});
+						connectionsNotification = new Notification({"id":"MIDI-Connections", "title":"MIDI Connections","duration":parseFloat(sticky?"-1":"4500"),"html":div,"target":"#midi-btn"});
 					}
 
 					document.getElementById("midi-btn").addEventListener("click", function(evt) {
@@ -2771,7 +2768,7 @@ class Notification extends EventEmitter {
 
 ////////////////////////////////////////////////////////////////
 	
-	window.onerror = function(message, url, line) {
+	window.onerror = function(message: string, url: string, line: number|string) {
 		var url = url || "(no url)";
 		var line = line || "(no line)";
 		// errors in socket.io
@@ -2829,7 +2826,7 @@ class Notification extends EventEmitter {
 
 
 	// API
-	window.MPP = {
+	(<any>window).MPP = {
 		press: press,
 		release: release,
 		pressSustain: pressSustain,
@@ -2854,7 +2851,7 @@ class Notification extends EventEmitter {
 	// record mp3
 	(function() {
 		var button = document.querySelector("#record-btn");
-		var audio = MPP.piano.audio;
+		var audio = (<any>window).MPP.piano.audio;
 		var context = audio.context;
 		var encoder_sample_rate = 44100;
 		var encoder_kbps = 128;
@@ -2864,40 +2861,41 @@ class Notification extends EventEmitter {
 		var recording_start_time = 0;
 		var mp3_buffer = [];
 		button.addEventListener("click", function(evt) {
-			if(!recording) {
-				// start recording
-				mp3_buffer = [];
-				encoder = new lamejs.Mp3Encoder(2, encoder_sample_rate, encoder_kbps);
-				scriptProcessorNode.onaudioprocess = onAudioProcess;
-				audio.masterGain.connect(scriptProcessorNode);
-				scriptProcessorNode.connect(context.destination);
-				recording_start_time = Date.now();
-				recording = true;
-				button.textContent = "Stop Recording";
-				button.classList.add("stuck");
-				new Notification({"id": "mp3", "title": "Recording MP3...", "html": "It's recording now.  This could make things slow, maybe.  Maybe give it a moment to settle before playing.<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 10000});
-			} else {
-				// stop recording
-				var mp3buf = encoder.flush();
-				mp3_buffer.push(mp3buf);
-				var blob = new Blob(mp3_buffer, {type: "audio/mp3"});
-				var url = URL.createObjectURL(blob);
-				scriptProcessorNode.onaudioprocess = null;
-				audio.masterGain.disconnect(scriptProcessorNode);
-				scriptProcessorNode.disconnect(context.destination);
-				recording = false;
-				button.textContent = "Record MP3";
-				button.classList.remove("stuck");
-				new Notification({"id": "mp3", "title": "MP3 recording finished", "html": "<a href=\""+url+"\" target=\"blank\">And here it is!</a> (open or save as)<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 0});
-			}
+			// if(!recording) {
+			// 	// start recording
+			// 	mp3_buffer = [];
+			// 	encoder = new lamejs.Mp3Encoder(2, encoder_sample_rate, encoder_kbps);
+			// 	scriptProcessorNode.onaudioprocess = onAudioProcess;
+			// 	audio.masterGain.connect(scriptProcessorNode);
+			// 	scriptProcessorNode.connect(context.destination);
+			// 	recording_start_time = Date.now();
+			// 	recording = true;
+			// 	button.textContent = "Stop Recording";
+			// 	button.classList.add("stuck");
+				// new Notification({"id": "mp3", "title": "Recording MP3...", "html": "It's recording now.  This could make things slow, maybe.  Maybe give it a moment to settle before playing.<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 10000});
+				new Notification({"id": "mp3", "title": "Recording MP3s is broken.", "html": "You can no longer record MP3s.", "duration": 10000});
+			// } else {
+			// 	// stop recording
+			// 	var mp3buf = encoder.flush();
+			// 	mp3_buffer.push(mp3buf);
+			// 	var blob = new Blob(mp3_buffer, {type: "audio/mp3"});
+			// 	var url = URL.createObjectURL(blob);
+			// 	scriptProcessorNode.onaudioprocess = null;
+			// 	audio.masterGain.disconnect(scriptProcessorNode);
+			// 	scriptProcessorNode.disconnect(context.destination);
+			// 	recording = false;
+			// 	button.textContent = "Record MP3";
+			// 	button.classList.remove("stuck");
+			// 	new Notification({"id": "mp3", "title": "MP3 recording finished", "html": "<a href=\""+url+"\" target=\"blank\">And here it is!</a> (open or save as)<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 0});
+			// }
 		});
-		function onAudioProcess(evt?) {
+		function onAudioProcess(evt?: any) { // TODO replace any
 			var inputL = evt.inputBuffer.getChannelData(0);
 			var inputR = evt.inputBuffer.getChannelData(1);
 			var mp3buf = encoder.encodeBuffer(convert16(inputL), convert16(inputR));
 			mp3_buffer.push(mp3buf);
 		}
-		function convert16(samples?) {
+		function convert16(samples?: Array<any>) { // TODO replace any
 			var len = samples.length;
 			var result = new Int16Array(len);
 			for(var i = 0; i < len; i++) {
@@ -2906,12 +2904,6 @@ class Notification extends EventEmitter {
 			return(result);
 		}
 	})();
-
-
-
-
-
-
 
 	// synth
 	var enableSynth = false;
@@ -2992,7 +2984,7 @@ class Notification extends EventEmitter {
 			})();
 
 			// mix
-			var knob = document.createElement("canvas");
+			var knob = <Knob | any> document.createElement("canvas"); // TODO replace any
 			mixin(knob, {width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob"});
 			html.appendChild(knob);
 			knob = new Knob(knob, 0, 100, 0.1, 50, "mix", "%");
@@ -3019,7 +3011,7 @@ class Notification extends EventEmitter {
 			})();
 
 			// osc1 attack
-			var knob = document.createElement("canvas");
+			var knob = <Knob | any> document.createElement("canvas"); // TODO replace any
 			mixin(knob, {width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob"});
 			html.appendChild(knob);
 			knob = new Knob(knob, 0, 1, 0.001, osc1_attack, "osc1 attack", "s");
@@ -3031,7 +3023,7 @@ class Notification extends EventEmitter {
 			knob.emit("change", knob);
 
 			// osc1 decay
-			var knob = document.createElement("canvas");
+			var knob = <Knob | any> document.createElement("canvas"); // TODO replace any
 			mixin(knob, {width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob"});
 			html.appendChild(knob);
 			knob = new Knob(knob, 0, 2, 0.001, osc1_decay, "osc1 decay", "s");
@@ -3042,7 +3034,7 @@ class Notification extends EventEmitter {
 			});
 			knob.emit("change", knob);
 
-			var knob = document.createElement("canvas");
+			var knob = <Knob | any> document.createElement("canvas"); // TODO replace any
 			mixin(knob, {width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob"});
 			html.appendChild(knob);
 			knob = new Knob(knob, 0, 1, 0.001, osc1_sustain, "osc1 sustain", "x");
@@ -3054,7 +3046,7 @@ class Notification extends EventEmitter {
 			knob.emit("change", knob);
 
 			// osc1 release
-			var knob = document.createElement("canvas");
+			var knob = <Knob | any> document.createElement("canvas"); // TODO replace any
 			mixin(knob, {width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob"});
 			html.appendChild(knob);
 			knob = new Knob(knob, 0, 2, 0.001, osc1_release, "osc1 release", "s");
@@ -3082,62 +3074,30 @@ class Notification extends EventEmitter {
 			});
 		}
 	})();
-
-
-
-
-	
-
-
-
-
-
-
-
-	
-
-
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // misc
 
 ////////////////////////////////////////////////////////////////
 
-// analytics	
-window.google_analytics_uacct = "UA-882009-7";
+// analytics
+(<any>window).google_analytics_uacct = "UA-882009-7";
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-882009-7']);
 _gaq.push(['_trackPageview']);
 _gaq.push(['_setAllowAnchor', true]);
 (function() {
 	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	ga.src = ('https:' == document.location.protocol ? 'http://web.archive.org/web/20200825094242/https://ssl' : 'http://web.archive.org/web/20200825094242/http://www') + '.google-analytics.com/ga.js';
+	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
-
+/*
 // twitter
 !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;
 	js.src="//web.archive.org/web/20200825094242/https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
-
+*/
 // fb
+/*
 (function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];
   if (d.getElementById(id)) return;
@@ -3145,6 +3105,7 @@ _gaq.push(['_setAllowAnchor', true]);
   js.src = "//web.archive.org/web/20200825094242/https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.8";
   fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));
+*/
 
 // non-ad-free experience
 /*(function() {

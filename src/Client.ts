@@ -1,21 +1,27 @@
 interface Participant {
-    x?: number,
-    y?: number,
-    color?: string,
-    name: string,
-    _id: string,
-    id?: string
+    x?: number;
+    y?: number;
+    color?: string;
+    name: string;
+    _id: string;
+    id?: string;
+    nameDiv?: HTMLElement;
+    cursorDiv?: HTMLElement;
 }
 
 interface Ppl {
-    [key: string]: Participant
+    [key: string]: Participant;
 }
 
 interface Message {
-    p: Participant | string,
-    a?: string,
-    n?: any,
-    [key: string]: any
+    p: Participant | string;
+    a?: string;
+    n?: any;
+    [key: string]: any;
+}
+
+interface ChannelSettings {
+    [key: string]: any;
 }
 
 class Client extends EventEmitter {
@@ -39,6 +45,7 @@ class Client extends EventEmitter {
     ['🐈']: number;
     offlineParticipant: Participant;
     autoPickupCrown: boolean;
+    offlineChannelSettings = <ChannelSettings> {color:"#ecfaed"};
 
     constructor (uri: any) {
         super();
@@ -305,6 +312,17 @@ class Client extends EventEmitter {
             if(update.color) part.color = update.color;
             if(update.name) part.name = update.name;
         }
+    }
+
+    preventsPlaying() {
+        return <boolean> this.isConnected() && !this.isOwner() && this.getChannelSetting("crownsolo") === true;
+    }
+
+    getChannelSetting(key: string) {
+        if(!this.isConnected() || !this.channel || !this.channel.settings) {
+            return this.offlineChannelSettings[key];
+        } 
+        return this.channel.settings[key];
     }
 
     countParticipants() {
