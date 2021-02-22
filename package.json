@@ -1,0 +1,17 @@
+{
+  "name": "mpp-client-ts",
+  "version": "1.0.0",
+  "description": "A client for mpp written in TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hri7566",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.5"
+  }
+}

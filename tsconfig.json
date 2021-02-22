@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "none",
+        "outDir": "build/",
+        "lib": [
+            "es7",
+            "dom"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ]
+}
