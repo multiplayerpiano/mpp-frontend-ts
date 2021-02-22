@@ -767,147 +767,148 @@ class Rect {
 
 ////////////////////////////////////////////////////////////////
 
-	function SoundSelector(piano) {
-	    this.initialized = false;
-	    this.keys = piano.keys;
-	    this.loading = {};
-	    this.notification;
-	    this.packs = [];
-	    this.piano = piano;
-	    this.soundSelection = localStorage.soundSelection ? localStorage.soundSelection : "MPP Classic";
-	    this.addPack({name: "MPP Classic", keys: Object.keys(this.piano.keys), ext: ".mp3", url: "/sounds/mppclassic/"});
-	}
+	class SoundSelector {
+		initialized: boolean;
+		keys: any; // TODO: make this not any
+		loading: any; // TODO: same thing ^
+		notification: Notification;
+		packs: Array<any> // TODO: fix any here as well
+		piano: any;
+		soundSelection: string;
 
-	SoundSelector.prototype.addPack = function(pack, load) {
-		var self = this;
-		self.loading[pack.url || pack] = true;
-		function add(obj) {
-			var added = false;
-			for (var i = 0; self.packs.length > i; i++) {
-				if (obj.name == self.packs[i].name) {
-					added = true;
+		// TODO: idk what to make piano
+		constructor (piano: any) {
+			this.initialized = false;
+			this.keys = piano.keys;
+			this.packs = [];
+			this.piano = piano;
+			this.soundSelection = localStorage.soundSelection ? localStorage.soundSelection : "MPP Classic";
+			this.addPack({name: "MPP Classic", keys: Object.keys(this.piano.keys), ext: ".mp3", url: "/sounds/mppclassic/"});
+		}
+
+		// TODO: make a SoundPack interface
+		addPack(pack: any, load?: any) {
+			var self = this;
+			self.loading[pack.url || pack] = true;
+			function add(obj) {
+				var added = false;
+				for (var i = 0; self.packs.length > i; i++) {
+					if (obj.name == self.packs[i].name) {
+						added = true;
+						break;
+					}
+				}
+
+				if (added) return console.warn("Sounds already added!!"); //no adding soundpacks twice D:<
+
+				if (obj.url.substr(obj.url.length-1) != "/") obj.url = obj.url + "/";
+				var html = document.createElement("li");
+				// html.cassList = "pack";
+				html.classList.add("pack"); // Changed to add - Hri7566
+				html.innerText = obj.name + " (" + obj.keys.length + " keys)";
+				html.onclick = function() {
+					self.loadPack(obj.name);
+					self.notification.close();
+				};
+				obj.html = html;
+				self.packs.push(obj);
+				self.packs.sort(function(a, b) {
+					if(a.name < b.name) return -1;
+					if(a.name > b.name) return 1;
+					return 0;
+				});
+				if (load) self.loadPack(obj.name);
+				delete self.loading[obj.url];
+			}
+
+			if (typeof pack == "string") {
+				$.getJSON(pack + "/info.json").done(function(json) {
+					json.url = pack;
+					add(json);
+				});
+			} else add(pack); //validate packs??
+		}
+
+		loadPack(pack: any, f?: any) {
+			for (var i = 0; this.packs.length > i; i++) {
+				var p = this.packs[i];
+				if (p.name == pack) {
+					pack = p;
 					break;
 				}
 			}
-
-			if (added) return console.warn("Sounds already added!!"); //no adding soundpacks twice D:<
-
-			if (obj.url.substr(obj.url.length-1) != "/") obj.url = obj.url + "/";
-			var html = document.createElement("li");
-			html.classList = "pack";
-			html.innerText = obj.name + " (" + obj.keys.length + " keys)";
-			html.onclick = function() {
-				self.loadPack(obj.name);
-				self.notification.close();
-			};
-			obj.html = html;
-			self.packs.push(obj);
-			self.packs.sort(function(a, b) {
-	            if(a.name < b.name) return -1;
-	            if(a.name > b.name) return 1;
-	            return 0;
-	        });
-	        if (load) self.loadPack(obj.name);
-	        delete self.loading[obj.url];
+			if (typeof pack == "string") {
+				console.warn("Sound pack does not exist! Loading default pack...");
+				return this.loadPack("MPP Classic");
+			}
+	
+			if (pack.name == this.soundSelection && !f) return;
+			if (pack.keys.length != Object.keys(this.piano.keys).length) {
+				this.piano.keys = {};
+				for (var i = 0; pack.keys.length > i; i++) this.piano.keys[pack.keys[i]] = this.keys[pack.keys[i]];
+				this.piano.renderer.resize();
+			}
+	
+			var self = this;
+			for (var k in this.piano.keys) {
+				if (!this.piano.keys.hasOwnProperty(k)) continue;
+				(function() {
+					var key = self.piano.keys[k];
+					key.loaded = false;
+					self.piano.audio.load(key.note, pack.url + key.note + pack.ext, function() {
+						key.loaded = true;
+						key.timeLoaded = Date.now();
+					});
+				})();
+			}
+			if(localStorage) localStorage.soundSelection = pack.name;
+			this.soundSelection = pack.name;
 		}
 
-		if (typeof pack == "string") {
-			$.getJSON(pack + "/info.json").done(function(json) {
-				json.url = pack;
-				add(json);
+		addPacks(packs: any) {
+			for (var i = 0; packs.length > i; i++) this.addPack(packs[i]);
+		}
+
+		init() {
+			var self = this;
+			if (self.initialized) return console.warn("Sound selector already initialized!");
+
+			if (!!Object.keys(self.loading).length) return setTimeout(function() {
+				self.init();
+			}, 250);
+
+			$("#sound-btn").on("click", function() {
+				if (document.getElementById("Notification-Sound-Selector") != null)
+					return self.notification.close();
+				var html = document.createElement("ul");
+				//$(html).append("<p>Current Sound: " + self.soundSelection + "</p>");
+
+				for (var i = 0; self.packs.length > i; i++) {
+					var pack = self.packs[i];
+					if (pack.name == self.soundSelection) pack.html.classList = "pack enabled";
+					else pack.html.classList = "pack";
+					html.appendChild(pack.html);
+				}
+
+				self.notification = new Notification({title: "Sound Selector", html: html, id: "Sound-Selector", duration: -1, target: "#sound-btn"});
 			});
-		} else add(pack); //validate packs??
-	};
+			self.initialized = true;
+			self.loadPack(self.soundSelection, true);
+		}
 
-	SoundSelector.prototype.addPacks = function(packs) {
-		for (var i = 0; packs.length > i; i++) this.addPack(packs[i]);
-	};
-
-	SoundSelector.prototype.init = function() {
-		var self = this;
-		if (self.initialized) return console.warn("Sound selector already initialized!");
-
-	    if (!!Object.keys(self.loading).length) return setTimeout(function() {
-	        self.init();
-	    }, 250);
-
-	    $("#sound-btn").on("click", function() {
-			if (document.getElementById("Notification-Sound-Selector") != null)
-				return self.notification.close();
-			var html = document.createElement("ul");
-	        //$(html).append("<p>Current Sound: " + self.soundSelection + "</p>");
-
-	        for (var i = 0; self.packs.length > i; i++) {
-				var pack = self.packs[i];
-				if (pack.name == self.soundSelection) pack.html.classList = "pack enabled";
-				else pack.html.classList = "pack";
-				html.appendChild(pack.html);
-	        }
-
-			self.notification = new Notification({title: "Sound Selector", html: html, id: "Sound-Selector", duration: -1, target: "#sound-btn"});
-	    });
-	    self.initialized = true;
-	    self.loadPack(self.soundSelection, true);
-	};
-
-	SoundSelector.prototype.loadPack = function(pack, f) {
-		for (var i = 0; this.packs.length > i; i++) {
-			var p = this.packs[i];
-			if (p.name == pack) {
-				pack = p;
-				break;
+		removePack(name: string) {
+			var found = false;
+			for (var i = 0; this.packs.length > i; i++) {
+				var pack = this.packs[i];
+				if (pack.name == name) {
+					this.packs.splice(i, 1);
+					if (pack.name == this.soundSelection) this.loadPack(this.packs[0].name); //add mpp default if none?
+					break;
+				}
 			}
+			if (!found) console.warn("Sound pack not found!");
 		}
-		if (typeof pack == "string") {
-			console.warn("Sound pack does not exist! Loading default pack...");
-	        return this.loadPack("MPP Classic");
-		}
-
-		if (pack.name == this.soundSelection && !f) return;
-		if (pack.keys.length != Object.keys(this.piano.keys).length) {
-			this.piano.keys = {};
-			for (var i = 0; pack.keys.length > i; i++) this.piano.keys[pack.keys[i]] = this.keys[pack.keys[i]];
-			this.piano.renderer.resize();
-		}
-
-		var self = this;
-		for (var i in this.piano.keys) {
-	        if (!this.piano.keys.hasOwnProperty(i)) continue;
-	        (function() {
-	            var key = self.piano.keys[i];
-	            key.loaded = false;
-	            self.piano.audio.load(key.note, pack.url + key.note + pack.ext, function() {
-	                key.loaded = true;
-	                key.timeLoaded = Date.now();
-	            });
-	        })();
-	    }
-	    if(localStorage) localStorage.soundSelection = pack.name;
-	    this.soundSelection = pack.name;
-	};
-
-	SoundSelector.prototype.removePack = function(name) {
-		var found = false;
-		for (var i = 0; this.packs.length > i; i++) {
-			var pack = this.packs[i];
-			if (pack.name == name) {
-				this.packs.splice(i, 1);
-				if (pack.name == this.soundSelection) this.loadPack(this.packs[0].name); //add mpp default if none?
-				break;
-			}
-		}
-		if (!found) console.warn("Sound pack not found!");
-	};
-
-
-
-
-
-
-
-
-
-
+	}
 
 // Pianoctor
 
@@ -970,7 +971,7 @@ class Rect {
 		});
 
 
-		window.AudioContext = window.AudioContext || window.webkitAudioContext || undefined;
+		window.AudioContext = (<any>window).AudioContext || (<any>window).webkitAudioContext || undefined;
 		var audio_engine = AudioEngineWeb;
 		this.audio = new audio_engine().init();
 	};
@@ -1111,7 +1112,8 @@ class Rect {
 			part.displayY = 50;
 
 			// add nameDiv
-			var div = document.createElement("div");
+			var div: any; // TODO: make this not any, if possible
+			div = document.createElement("div");
 			div.className = "name";
 			div.participantId = part.id;
 			div.textContent = part.name || "";
