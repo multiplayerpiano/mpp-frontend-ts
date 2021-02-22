@@ -391,31 +391,6 @@ class Rect {
 		this.context.resume();
 	};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Renderer classes
 
 ////////////////////////////////////////////////////////////////
@@ -1880,11 +1855,31 @@ class Rect {
 
 ////////////////////////////////////////////////////////////////
 
-	var Notification = function(par) {
-		if(this instanceof Notification === false) throw("yeet");
-		EventEmitter.call(this);
+interface NotificationInput {
+	id: string,
+	title: string,
+	text: string,
+	html: string,
+	// TODO: maybe target shouldn't be any
+	target: any,
+	duration: number
+}
 
-		var par = par || {};
+class Notification extends EventEmitter {
+	id: string;
+	title: string;
+	text: string;
+	// TODO: maybe html shouldn't include any
+	html: string | HTMLElement | any;
+	target: any;
+	duration: number;
+	domElement: JQuery<HTMLElement>;
+
+	constructor (par: NotificationInput) {
+		super();
+		if (this instanceof Notification === false) throw("yeet");
+
+		let ipar = par || {};
 
 		this.id = "Notification-" + (par.id || Math.random());
 		this.title = par.title || "";
@@ -1893,7 +1888,7 @@ class Rect {
 		this.target = $(par.target || "#piano");
 		this.duration = par.duration || 30000;
 		this["class"] = par["class"] || "classic";
-		
+
 		var self = this;
 		var eles = $("#" + this.id);
 		if(eles.length > 0) {
@@ -1932,10 +1927,7 @@ class Rect {
 		return this;
 	}
 
-	mixin(Notification.prototype, EventEmitter.prototype);
-	Notification.prototype.constructor = Notification;
-
-	Notification.prototype.position = function() {
+	position() {
 		var pos = this.target.offset();
 		var x = pos.left - (this.domElement.width() / 2) + (this.target.width() / 4);
 		var y = pos.top - this.domElement.height() - 8;
@@ -1945,9 +1937,9 @@ class Rect {
 		}
 		if(x < 0) x = 0;
 		this.domElement.offset({left: x, top: y});
-	};
+	}
 
-	Notification.prototype.close = function() {
+	close() {
 		var self = this;
 		window.removeEventListener("resize",  this.onresize);
 		this.domElement.fadeOut(500, function() {
@@ -1955,6 +1947,9 @@ class Rect {
 			self.emit("close");
 		});
 	};
+	}
+}
+		
 
 
 
