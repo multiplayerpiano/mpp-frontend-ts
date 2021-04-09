@@ -59,9 +59,8 @@ var Color = /** @class */ (function () {
         return "#" + r + g + b;
     };
     Color.prototype.getName = function () {
-        var hexa = this.toHexa();
         var low = 256;
-        var name;
+        var name = "";
         for (var n in Color.map) {
             if (!Color.map.hasOwnProperty(n))
                 continue;

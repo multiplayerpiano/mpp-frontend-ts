@@ -6,6 +6,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -180,166 +182,173 @@ $(function () {
     }());
     var translation = new Translation();
     translation.perform();
-    // AudioEngine classes
-    ////////////////////////////////////////////////////////////////
-    var AudioEngine = function () {
-    };
-    AudioEngine.prototype.init = function (cb) {
-        this.volume = 0.6;
-        this.sounds = {};
-        this.paused = true;
-        return this;
-    };
-    AudioEngine.prototype.load = function (id, url, cb) {
-    };
-    AudioEngine.prototype.play = function () {
-    };
-    AudioEngine.prototype.stop = function () {
-    };
-    AudioEngine.prototype.setVolume = function (vol) {
-        this.volume = vol;
-    };
-    AudioEngine.prototype.resume = function () {
-        this.paused = false;
-    };
-    var AudioEngineWeb = function () {
-        this.threshold = 1000;
-        this.worker = new Worker("/workerTimer.js");
-        var self = this;
-        this.worker.onmessage = function (event) {
-            if (event.data.args)
-                if (event.data.args.action == 0) {
-                    self.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id);
-                }
-                else {
-                    self.actualStop(event.data.args.id, event.data.args.time, event.data.args.part_id);
-                }
+    var AudioEngineWeb = /** @class */ (function () {
+        function AudioEngineWeb() {
+            this.threshold = 1000;
+            this.worker = new Worker("/workerTimer.js");
+            var self = this;
+            this.worker.onmessage = function (event) {
+                if (event.data.args)
+                    if (event.data.args.action == 0) {
+                        self.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id);
+                    }
+                    else {
+                        self.actualStop(event.data.args.id, event.data.args.time, event.data.args.part_id);
+                    }
+            };
+        }
+        ;
+        AudioEngineWeb.prototype.init = function (cb) {
+            this.volume = 0.6;
+            this.sounds = {};
+            this.paused = true;
+            this.context = new AudioContext({
+                latencyHint: 'interactive'
+            });
+            this.masterGain = this.context.createGain();
+            this.masterGain.connect(this.context.destination);
+            this.masterGain.gain.value = this.volume;
+            this.limiterNode = this.context.createDynamicsCompressor();
+            this.limiterNode.threshold.value = -10;
+            this.limiterNode.knee.value = 0;
+            this.limiterNode.ratio.value = 20;
+            this.limiterNode.attack.value = 0;
+            this.limiterNode.release.value = 0.1;
+            this.limiterNode.connect(this.masterGain);
+            // for synth mix
+            this.pianoGain = this.context.createGain();
+            this.pianoGain.gain.value = 0.5;
+            this.pianoGain.connect(this.limiterNode);
+            this.synthGain = this.context.createGain();
+            this.synthGain.gain.value = 0.5;
+            this.synthGain.connect(this.limiterNode);
+            this.playings = {};
+            if (cb)
+                setTimeout(cb, 0);
+            return this;
         };
-    };
-    AudioEngineWeb.prototype = new AudioEngine();
-    AudioEngineWeb.prototype.init = function (cb) {
-        AudioEngine.prototype.init.call(this);
-        this.context = new AudioContext({ latencyHint: 'interactive' });
-        this.masterGain = this.context.createGain();
-        this.masterGain.connect(this.context.destination);
-        this.masterGain.gain.value = this.volume;
-        this.limiterNode = this.context.createDynamicsCompressor();
-        this.limiterNode.threshold.value = -10;
-        this.limiterNode.knee.value = 0;
-        this.limiterNode.ratio.value = 20;
-        this.limiterNode.attack.value = 0;
-        this.limiterNode.release.value = 0.1;
-        this.limiterNode.connect(this.masterGain);
-        // for synth mix
-        this.pianoGain = this.context.createGain();
-        this.pianoGain.gain.value = 0.5;
-        this.pianoGain.connect(this.limiterNode);
-        this.synthGain = this.context.createGain();
-        this.synthGain.gain.value = 0.5;
-        this.synthGain.connect(this.limiterNode);
-        this.playings = {};
-        if (cb)
-            setTimeout(cb, 0);
-        return this;
-    };
-    AudioEngineWeb.prototype.load = function (id, url, cb) {
-        var audio = this;
-        var req = new XMLHttpRequest();
-        req.open("GET", url);
-        req.responseType = "arraybuffer";
-        req.addEventListener("readystatechange", function (evt) {
-            if (req.readyState !== 4)
+        AudioEngineWeb.prototype.load = function (id, url, cb) {
+            var audio = this;
+            var req = new XMLHttpRequest();
+            req.open("GET", url);
+            req.responseType = "arraybuffer";
+            req.addEventListener("readystatechange", function (evt) {
+                if (req.readyState !== 4)
+                    return;
+                try {
+                    audio.context.decodeAudioData(req.response, function (buffer) {
+                        audio.sounds[id] = buffer;
+                        if (cb)
+                            cb();
+                    });
+                }
+                catch (e) {
+                    /*throw new Error(e.message
+                        + " / id: " + id
+                        + " / url: " + url
+                        + " / status: " + req.status
+                        + " / ArrayBuffer: " + (req.response instanceof ArrayBuffer)
+                        + " / byteLength: " + (req.response && req.response.byteLength ? req.response.byteLength : "undefined"));*/
+                    new Notification({
+                        id: "audio-download-error",
+                        title: "Problem",
+                        text: "For some reason, an audio download failed with a status of " + req.status + ". ",
+                        target: "#piano",
+                        duration: 10000
+                    });
+                }
+            });
+            req.send();
+        };
+        AudioEngineWeb.prototype.actualPlay = function (id, vol, time, part_id) {
+            if (this.paused)
                 return;
-            try {
-                audio.context.decodeAudioData(req.response, function (buffer) {
-                    audio.sounds[id] = buffer;
-                    if (cb)
-                        cb();
+            if (!this.sounds.hasOwnProperty(id))
+                return;
+            var source = this.context.createBufferSource();
+            source.buffer = this.sounds[id];
+            var gain = this.context.createGain();
+            gain.gain.value = vol;
+            source.connect(gain);
+            gain.connect(this.pianoGain);
+            source.start(time);
+            // Patch from ste-art remedies stuttering under heavy load
+            if (this.playings[id]) {
+                var playing = this.playings[id];
+                playing.gain.gain.setValueAtTime(playing.gain.gain.value, time);
+                playing.gain.gain.linearRampToValueAtTime(0.0, time + 0.2);
+                playing.source.stop(time + 0.21);
+                if (enableSynth && playing.voice) {
+                    playing.voice.stop(time);
+                }
+            }
+            this.playings[id] = {
+                "source": source,
+                "gain": gain,
+                "part_id": part_id,
+                "voice": enableSynth ? new synthVoice(id, time) : null
+            };
+        };
+        AudioEngineWeb.prototype.play = function (id, vol, delay_ms, part_id) {
+            if (!this.sounds.hasOwnProperty(id))
+                return;
+            var time = this.context.currentTime + (delay_ms / 1000); //calculate time on note receive.
+            var delay = delay_ms - this.threshold;
+            if (delay <= 0)
+                this.actualPlay(id, vol, time, part_id);
+            else {
+                this.worker.postMessage({
+                    delay: delay,
+                    args: {
+                        action: 0 /*play*/,
+                        id: id,
+                        vol: vol,
+                        time: time,
+                        part_id: part_id
+                    }
+                }); // but start scheduling right before play.
+            }
+        };
+        AudioEngineWeb.prototype.actualStop = function (id, time, part_id) {
+            if (this.playings.hasOwnProperty(id) && this.playings[id] && this.playings[id].part_id === part_id) {
+                var gain = this.playings[id].gain.gain;
+                gain.setValueAtTime(gain.value, time);
+                gain.linearRampToValueAtTime(gain.value * 0.1, time + 0.16);
+                gain.linearRampToValueAtTime(0.0, time + 0.4);
+                this.playings[id].source.stop(time + 0.41);
+                if (this.playings[id].voice) {
+                    this.playings[id].voice.stop(time);
+                }
+                this.playings[id] = null;
+            }
+        };
+        AudioEngineWeb.prototype.stop = function (id, delay_ms, part_id) {
+            var time = this.context.currentTime + (delay_ms / 1000);
+            var delay = delay_ms - this.threshold;
+            if (delay <= 0)
+                this.actualStop(id, time, part_id);
+            else {
+                this.worker.postMessage({
+                    delay: delay,
+                    args: {
+                        action: 1 /*stop*/,
+                        id: id,
+                        time: time,
+                        part_id: part_id
+                    }
                 });
             }
-            catch (e) {
-                /*throw new Error(e.message
-                    + " / id: " + id
-                    + " / url: " + url
-                    + " / status: " + req.status
-                    + " / ArrayBuffer: " + (req.response instanceof ArrayBuffer)
-                    + " / byteLength: " + (req.response && req.response.byteLength ? req.response.byteLength : "undefined"));*/
-                new Notification({ id: "audio-download-error", title: "Problem", text: "For some reason, an audio download failed with a status of " + req.status + ". ",
-                    target: "#piano", duration: 10000 });
-            }
-        });
-        req.send();
-    };
-    AudioEngineWeb.prototype.actualPlay = function (id, vol, time, part_id) {
-        if (this.paused)
-            return;
-        if (!this.sounds.hasOwnProperty(id))
-            return;
-        var source = this.context.createBufferSource();
-        source.buffer = this.sounds[id];
-        var gain = this.context.createGain();
-        gain.gain.value = vol;
-        source.connect(gain);
-        gain.connect(this.pianoGain);
-        source.start(time);
-        // Patch from ste-art remedies stuttering under heavy load
-        if (this.playings[id]) {
-            var playing = this.playings[id];
-            playing.gain.gain.setValueAtTime(playing.gain.gain.value, time);
-            playing.gain.gain.linearRampToValueAtTime(0.0, time + 0.2);
-            playing.source.stop(time + 0.21);
-            if (enableSynth && playing.voice) {
-                playing.voice.stop(time);
-            }
-        }
-        this.playings[id] = { "source": source, "gain": gain, "part_id": part_id };
-        if (enableSynth) {
-            this.playings[id].voice = new synthVoice(id, time);
-        }
-    };
-    AudioEngineWeb.prototype.play = function (id, vol, delay_ms, part_id) {
-        if (!this.sounds.hasOwnProperty(id))
-            return;
-        var time = this.context.currentTime + (delay_ms / 1000); //calculate time on note receive.
-        var delay = delay_ms - this.threshold;
-        if (delay <= 0)
-            this.actualPlay(id, vol, time, part_id);
-        else {
-            this.worker.postMessage({ delay: delay, args: { action: 0 /*play*/, id: id, vol: vol, time: time, part_id: part_id } }); // but start scheduling right before play.
-        }
-    };
-    AudioEngineWeb.prototype.actualStop = function (id, time, part_id) {
-        if (this.playings.hasOwnProperty(id) && this.playings[id] && this.playings[id].part_id === part_id) {
-            var gain = this.playings[id].gain.gain;
-            gain.setValueAtTime(gain.value, time);
-            gain.linearRampToValueAtTime(gain.value * 0.1, time + 0.16);
-            gain.linearRampToValueAtTime(0.0, time + 0.4);
-            this.playings[id].source.stop(time + 0.41);
-            if (this.playings[id].voice) {
-                this.playings[id].voice.stop(time);
-            }
-            this.playings[id] = null;
-        }
-    };
-    AudioEngineWeb.prototype.stop = function (id, delay_ms, part_id) {
-        var time = this.context.currentTime + (delay_ms / 1000);
-        var delay = delay_ms - this.threshold;
-        if (delay <= 0)
-            this.actualStop(id, time, part_id);
-        else {
-            this.worker.postMessage({ delay: delay, args: { action: 1 /*stop*/, id: id, time: time, part_id: part_id } });
-        }
-    };
-    AudioEngineWeb.prototype.setVolume = function (vol) {
-        AudioEngine.prototype.setVolume.call(this, vol);
-        this.masterGain.gain.value = this.volume;
-    };
-    AudioEngineWeb.prototype.resume = function () {
-        this.paused = false;
-        this.context.resume();
-    };
-    // Renderer classes
-    ////////////////////////////////////////////////////////////////
+        };
+        AudioEngineWeb.prototype.setVolume = function (vol) {
+            this.volume = vol;
+            this.masterGain.gain.value = this.volume;
+        };
+        AudioEngineWeb.prototype.resume = function () {
+            this.paused = false;
+            this.context.resume();
+        };
+        return AudioEngineWeb;
+    }());
     var Renderer = /** @class */ (function () {
         function Renderer() {
         }
@@ -353,12 +362,12 @@ $(function () {
                 width = $(this.piano.rootElement).width();
             if (typeof height == "undefined")
                 height = Math.floor(width * 0.2);
-            $(this.piano.rootElement).css({ "height": height + "px", marginTop: Math.floor($(window).height() / 2 - height / 2) + "px" });
+            $(this.piano.rootElement).css({
+                "height": height + "px",
+                marginTop: Math.floor($(window).height() / 2 - height / 2) + "px"
+            });
             this.width = width * window.devicePixelRatio;
             this.height = height * window.devicePixelRatio;
-        };
-        // TODO: make these arguments not any type
-        Renderer.prototype.visualize = function (key, color) {
         };
         return Renderer;
     }());
@@ -367,7 +376,6 @@ $(function () {
         function CanvasRenderer() {
             return _super.call(this) || this;
         }
-        // TODO: replace any here too
         CanvasRenderer.prototype.init = function (piano) {
             this.canvas = document.createElement('canvas');
             this.ctx = this.canvas.getContext('2d');
@@ -414,19 +422,20 @@ $(function () {
                 mouse_down = false;
                 last_key = null;
             });
-            /*$(piano.rootElement).mousemove(function(event) {
-                if(!mouse_down) return;
+            $(piano.rootElement).mousemove(function (event) {
+                if (!mouse_down)
+                    return;
                 var pos = CanvasRenderer.translateMouseEvent(event);
                 var hit = self.getHit(pos.x, pos.y);
-                if(hit && hit.key != last_key) {
+                if (hit && hit.key != last_key) {
                     press(hit.key.note, hit.v);
                     last_key = hit.key;
                 }
-            });*/
+            });
             return this;
         };
         CanvasRenderer.prototype.redraw = function (width, height) {
-            Renderer.prototype.resize.call(this, width, height);
+            _super.prototype.resize.call(this, width, height);
             if (this.width < 52 * 2)
                 this.width = 52 * 2;
             if (this.height < this.width * 0.2)
@@ -575,8 +584,8 @@ $(function () {
                     if (key.timePlayed > timePlayedEnd) {
                         y = Math.floor(this.keyMovement - (((now - key.timePlayed) / 100) * this.keyMovement));
                     }
-                    var x = Math.floor(key.sharp ? this.blackKeyOffset + this.whiteKeyWidth * key.spatial
-                        : this.whiteKeyWidth * key.spatial);
+                    var x = Math.floor(key.sharp ? this.blackKeyOffset + this.whiteKeyWidth * key.spatial :
+                        this.whiteKeyWidth * key.spatial);
                     var image;
                     if (key.sharp == true) {
                         image = this.blackKeyRender;
@@ -623,7 +632,8 @@ $(function () {
             }
             this.ctx.restore();
         };
-        CanvasRenderer.translateMouseEvent = function (evt) {
+        //TODO: any bruh moment
+        CanvasRenderer.translateMouseEvent = function (evt /*JQuery.MouseDownEvent*/) {
             var element = evt.target;
             var offx = 0;
             var offy = 0;
@@ -653,7 +663,10 @@ $(function () {
                         v *= DEFAULT_VELOCITY;
                         if (v > 1.0)
                             v = 1.0;
-                        return { "key": key, "v": v };
+                        return {
+                            "key": key,
+                            "v": v
+                        };
                     }
                 }
             }
@@ -661,7 +674,10 @@ $(function () {
         };
         CanvasRenderer.prototype.visualize = function (key, color) {
             key.timePlayed = Date.now();
-            key.blips.push({ "time": key.timePlayed, "color": color });
+            key.blips.push({
+                "time": key.timePlayed,
+                "color": color
+            });
         };
         CanvasRenderer.prototype.renderNoteLyrics = function () {
             //* Commented out b/c never used and causes errors - Hri7566
@@ -683,10 +699,8 @@ $(function () {
         };
         return CanvasRenderer;
     }(Renderer));
-    // Soundpack Stuff by electrashave ♥
-    ////////////////////////////////////////////////////////////////
+    ;
     var SoundSelector = /** @class */ (function () {
-        // TODO: idk what to make piano
         function SoundSelector(piano) {
             this.initialized = false;
             this.keys = piano.keys;
@@ -694,7 +708,12 @@ $(function () {
             this.piano = piano;
             this.soundSelection = localStorage.soundSelection ? localStorage.soundSelection : "MPP Classic";
             this.loading = [];
-            this.addPack({ name: "MPP Classic", keys: Object.keys(this.piano.keys), ext: ".mp3", url: "/sounds/mppclassic/" });
+            this.addPack({
+                name: "MPP Classic",
+                keys: Object.keys(this.piano.keys),
+                ext: ".mp3",
+                url: "/sounds/mppclassic/"
+            });
         }
         // TODO: make a SoundPack interface
         SoundSelector.prototype.addPack = function (pack, load) {
@@ -742,15 +761,21 @@ $(function () {
             else
                 add(pack); //validate packs??
         };
-        SoundSelector.prototype.loadPack = function (pack, f) {
-            for (var i = 0; this.packs.length > i; i++) {
-                var p = this.packs[i];
+        SoundSelector.prototype.loadPack = function (packName, f) {
+            //who needs for loops anyway?
+            /*for (var i = 0; this.packs.length > i; i++) {
+                let p = this.packs[i];
                 if (p.name == pack) {
                     pack = p;
                     break;
                 }
             }
             if (typeof pack == "string") {
+                console.warn("Sound pack does not exist! Loading default pack...");
+                return this.loadPack("MPP Classic");
+            }*/
+            var pack = this.packs.find(function (p) { return p.name == packName; });
+            if (!pack) {
                 console.warn("Sound pack does not exist! Loading default pack...");
                 return this.loadPack("MPP Classic");
             }
@@ -799,12 +824,18 @@ $(function () {
                 for (var i = 0; self.packs.length > i; i++) {
                     var pack = self.packs[i];
                     if (pack.name == self.soundSelection)
-                        pack.html.classList = "pack enabled";
+                        pack.html.classList.add("pack enabled");
                     else
-                        pack.html.classList = "pack";
+                        pack.html.classList.add("pack");
                     html.appendChild(pack.html);
                 }
-                self.notification = new Notification({ title: "Sound Selector", html: html, id: "Sound-Selector", duration: -1, target: "#sound-btn" });
+                self.notification = new Notification({
+                    title: "Sound Selector",
+                    html: html,
+                    id: "Sound-Selector",
+                    duration: -1,
+                    target: "#sound-btn"
+                });
             });
             self.initialized = true;
             self.loadPack(self.soundSelection, true);
@@ -1117,7 +1148,10 @@ $(function () {
         var jqcountdown = $('<span></span>').appendTo(jqcrown);
         var countdown_interval;
         jqcrown.click(function () {
-            gClient.sendArray([{ m: "chown", id: gClient.participantId }]);
+            gClient.sendArray([{
+                    m: "chown",
+                    id: gClient.participantId
+                }]);
         });
         gClient.on("ch", function (msg) {
             if (msg.ch.crown) {
@@ -1128,12 +1162,21 @@ $(function () {
                     jqcountdown.text("");
                     jqcrown.show();
                     if (land_time - Date.now() <= 0) {
-                        jqcrown.css({ "left": crown.endPos.x + "%", "top": crown.endPos.y + "%" });
+                        jqcrown.css({
+                            "left": crown.endPos.x + "%",
+                            "top": crown.endPos.y + "%"
+                        });
                     }
                     else {
-                        jqcrown.css({ "left": crown.startPos.x + "%", "top": crown.startPos.y + "%" });
+                        jqcrown.css({
+                            "left": crown.startPos.x + "%",
+                            "top": crown.startPos.y + "%"
+                        });
                         jqcrown.addClass("spin");
-                        jqcrown.animate({ "left": crown.endPos.x + "%", "top": crown.endPos.y + "%" }, 2000, "linear", function () {
+                        jqcrown.animate({
+                            "left": crown.endPos.x + "%",
+                            "top": crown.endPos.y + "%"
+                        }, 2000, "linear", function () {
                             jqcrown.removeClass("spin");
                         });
                     }
@@ -1209,9 +1252,18 @@ $(function () {
         if (Math.abs(mx - last_mx) > 0.1 || Math.abs(my - last_my) > 0.1) {
             last_mx = mx;
             last_my = my;
-            gClient.sendArray([{ m: "m", x: mx, y: my }]);
+            gClient.sendArray([{
+                    m: "m",
+                    x: mx,
+                    y: my
+                }]);
             if (gSeeOwnCursor) {
-                gClient.emit("m", { m: "m", id: gClient.participantId, x: mx, y: my });
+                gClient.emit("m", {
+                    m: "m",
+                    id: gClient.participantId,
+                    x: mx,
+                    y: my
+                });
             }
             var part = gClient.getOwnParticipant();
             if (part) {
@@ -1259,7 +1311,9 @@ $(function () {
         $("#room-settings .drop-crown").click(function () {
             closeModal();
             if (confirm("This will drop the crown...!"))
-                gClient.sendArray([{ m: "chown" }]);
+                gClient.sendArray([{
+                        m: "chown"
+                    }]);
         });
     })();
     // Handle notifications
@@ -1384,7 +1438,12 @@ $(function () {
         this.note = note;
         this.octave = octave || 0;
     };
-    var n = function (a, b) { return { note: new Note(a, b), held: false }; };
+    var n = function (a, b) {
+        return {
+            note: new Note(a, b),
+            held: false
+        };
+    };
     var key_binding = {
         65: n("gs"),
         90: n("a"),
@@ -1559,7 +1618,9 @@ $(function () {
             if (rat <= last_rat)
                 nqjq.stop(true, true).css("width", rat.toFixed(0) + "%");
             else
-                nqjq.stop(true, true).animate({ "width": rat.toFixed(0) + "%" }, 2000, "linear");
+                nqjq.stop(true, true).animate({
+                    "width": rat.toFixed(0) + "%"
+                }, 2000, "linear");
             last_rat = rat;
         });
     })();
@@ -1709,7 +1770,10 @@ $(function () {
                 $('<div class="menu-item give-crown">Give Crown</div>').appendTo(menu)
                     .on("mousedown touchstart", function (evt) {
                     if (confirm("Give room ownership to " + part.name + "?"))
-                        gClient.sendArray([{ m: "chown", id: part.id }]);
+                        gClient.sendArray([{
+                                m: "chown",
+                                id: part.id
+                            }]);
                 });
                 $('<div class="menu-item kickban">Kickban</div>').appendTo(menu)
                     .on("mousedown touchstart", function (evt) {
@@ -1719,7 +1783,11 @@ $(function () {
                         return;
                     minutes = parseFloat(minutes) || 0;
                     var ms = minutes * 60 * 1000;
-                    gClient.sendArray([{ m: "kickban", _id: part._id, ms: ms }]);
+                    gClient.sendArray([{
+                            m: "kickban",
+                            _id: part._id,
+                            ms: ms
+                        }]);
                 });
             }
             menu.fadeIn(100);
@@ -1786,7 +1854,10 @@ $(function () {
             }
             if (x < 0)
                 x = 0;
-            this.domElement.offset({ left: x, top: y });
+            this.domElement.offset({
+                left: x,
+                top: y
+            });
         };
         Notification.prototype.close = function () {
             var self = this;
@@ -1807,7 +1878,12 @@ $(function () {
         gKnowsYouCanUseKeyboard = true;
     if (!gKnowsYouCanUseKeyboard) {
         window.gKnowsYouCanUseKeyboardTimeout = setTimeout(function () {
-            window.gKnowsYouCanUseKeyboardNotification = new Notification({ title: "Did you know!?!", text: "You can play the piano with your keyboard, too.  Try it!", target: "#piano", duration: 10000 });
+            window.gKnowsYouCanUseKeyboardNotification = new Notification({
+                title: "Did you know!?!",
+                text: "You can play the piano with your keyboard, too.  Try it!",
+                target: "#piano",
+                duration: 10000
+            });
         }, 30000);
     }
     if (window.localStorage) {
@@ -1819,8 +1895,7 @@ $(function () {
         else
             localStorage.volume = gPiano.audio.volume;
         window.gHasBeenHereBefore = (localStorage.gHasBeenHereBefore || false);
-        if (window.gHasBeenHereBefore) {
-        }
+        if (window.gHasBeenHereBefore) { }
         localStorage.gHasBeenHereBefore = true;
     }
     // warn user about loud noises before starting sound (no autoplay)
@@ -1918,12 +1993,16 @@ $(function () {
                 return;
             $(document).off("mousedown", doc_click);
             $("#room .more").fadeOut(250);
-            gClient.sendArray([{ m: "-ls" }]);
+            gClient.sendArray([{
+                    m: "-ls"
+                }]);
         };
         $(document).on("mousedown", doc_click);
         $("#room .more .info").remove();
         $("#room .more").show();
-        gClient.sendArray([{ m: "+ls" }]);
+        gClient.sendArray([{
+                m: "+ls"
+            }]);
     });
     $("#new-room-btn").on("click", function (evt) {
         evt.stopPropagation();
@@ -1932,12 +2011,19 @@ $(function () {
     $("#play-alone-btn").on("click", function (evt) {
         evt.stopPropagation();
         var room_name = "Room" + Math.floor(Math.random() * 1000000000000);
-        changeRoom(room_name, "right", { "visible": false });
+        changeRoom(room_name, "right", {
+            "visible": false
+        });
         setTimeout(function () {
-            new Notification({ id: "share", title: "Playing alone", html: 'You are playing alone in a room by yourself, but you can always invite \
+            new Notification({
+                id: "share",
+                title: "Playing alone",
+                html: 'You are playing alone in a room by yourself, but you can always invite \
 				friends by sending them the link.<br/><br/>\
 				<a href="#" onclick="window.open(\'https://www.facebook.com/sharer/sharer.php?u=\'+encodeURIComponent(location.href),\'facebook-share-dialog\',\'width=626,height=436\');return false;">Share on Facebook</a><br/><br/>\
-				<a href="http://twitter.com/home?status=' + encodeURIComponent(location.href) + '" target="_blank">Tweet</a>', duration: 25000 });
+				<a href="http://twitter.com/home?status=' + encodeURIComponent(location.href) + '" target="_blank">Tweet</a>',
+                duration: 25000
+            });
         }, 1000);
     });
     var gModal;
@@ -1988,9 +2074,14 @@ $(function () {
             closeModal();
             changeRoom(name, "right", settings);
             setTimeout(function () {
-                new Notification({ id: "share", title: "Created a Room", html: 'You can invite friends to your room by sending them the link.<br/><br/>\
+                new Notification({
+                    id: "share",
+                    title: "Created a Room",
+                    html: 'You can invite friends to your room by sending them the link.<br/><br/>\
 				<a href="#" onclick="window.open(\'https://www.facebook.com/sharer/sharer.php?u=\'+encodeURIComponent(location.href),\'facebook-share-dialog\',\'width=626,height=436\');return false;">Share on Facebook</a><br/><br/>\
-				<a href="http://web.archive.org/web/20200825094242/http://twitter.com/home?status=' + encodeURIComponent(location.href) + '" target="_blank">Tweet</a>', duration: 25000 });
+				<a href="http://web.archive.org/web/20200825094242/http://twitter.com/home?status=' + encodeURIComponent(location.href) + '" target="_blank">Tweet</a>',
+                    duration: 25000
+                });
             }, 1000);
         }
         ;
@@ -2027,7 +2118,10 @@ $(function () {
         if (push) {
             var url = "/" + encodeURIComponent(name).replace("'", "%27");
             if (window.history && history.pushState) {
-                history.pushState({ "depth": gHistoryDepth += 1, "name": name }, "Piano > " + name, url);
+                history.pushState({
+                    "depth": gHistoryDepth += 1,
+                    "name": name
+                }, "Piano > " + name, url);
             }
             else {
                 window.location.href = url;
@@ -2070,7 +2164,10 @@ $(function () {
             };
             //$("#rename .text[name=name]").val("");
             closeModal();
-            gClient.sendArray([{ m: "userset", set: set }]);
+            gClient.sendArray([{
+                    m: "userset",
+                    set: set
+                }]);
         }
         ;
         $("#rename .submit").click(function (evt) {
@@ -2206,7 +2303,10 @@ $(function () {
                 }
             },
             send: function (message) {
-                gClient.sendArray([{ m: "a", message: message }]);
+                gClient.sendArray([{
+                        m: "a",
+                        message: message
+                    }]);
             },
             receive: function (msg) {
                 if (gChatMutes.indexOf(msg.p._id) != -1)
@@ -2251,7 +2351,10 @@ $(function () {
     MIDI_KEY_NAMES.push("c7");
     var devices_json = "[]";
     function sendDevices() {
-        gClient.sendArray([{ "m": "devices", "list": JSON.parse(devices_json) }]);
+        gClient.sendArray([{
+                "m": "devices",
+                "list": JSON.parse(devices_json)
+            }]);
     }
     gClient.on("connect", sendDevices);
     (function () {
@@ -2456,7 +2559,11 @@ $(function () {
                             if (gMidiVolumeTest) {
                                 var knob;
                                 knob = document.createElement("canvas");
-                                mixin(knob, { width: 16 * window.devicePixelRatio, height: 16 * window.devicePixelRatio, className: "knob" });
+                                mixin(knob, {
+                                    width: 16 * window.devicePixelRatio,
+                                    height: 16 * window.devicePixelRatio,
+                                    className: "knob"
+                                });
                                 li.appendChild(knob);
                                 knob = new Knob(knob, 0, 2, 0.01, output.volume, "volume");
                                 knob.canvas.style.width = "16px";
@@ -2482,7 +2589,13 @@ $(function () {
                     h1.textContent = "Outputs";
                     div.appendChild(h1);
                     div.appendChild(outputs_ul);
-                    connectionsNotification = new Notification({ "id": "MIDI-Connections", "title": "MIDI Connections", "duration": parseFloat(sticky ? "-1" : "4500"), "html": div, "target": "#midi-btn" });
+                    connectionsNotification = new Notification({
+                        "id": "MIDI-Connections",
+                        "title": "MIDI Connections",
+                        "duration": parseFloat(sticky ? "-1" : "4500"),
+                        "html": div,
+                        "target": "#midi-btn"
+                    });
                 }
                 document.getElementById("midi-btn").addEventListener("click", function (evt) {
                     if (!document.getElementById("Notification-MIDI-Connections"))
@@ -2558,10 +2671,10 @@ $(function () {
             if (message.indexOf("Property '$' of object [object Object] is not a function") !== -1)
                 return;
         }
-        var enc = "/bugreport/"
-            + (message ? encodeURIComponent(message) : "") + "/"
-            + (url ? encodeURIComponent(url) : "") + "/"
-            + (line ? encodeURIComponent(line) : "");
+        var enc = "/bugreport/" +
+            (message ? encodeURIComponent(message) : "") + "/" +
+            (url ? encodeURIComponent(url) : "") + "/" +
+            (line ? encodeURIComponent(line) : "");
         var img = new Image();
         img.src = enc;
     };
@@ -2603,7 +2716,12 @@ $(function () {
             // 	button.textContent = "Stop Recording";
             // 	button.classList.add("stuck");
             // new Notification({"id": "mp3", "title": "Recording MP3...", "html": "It's recording now.  This could make things slow, maybe.  Maybe give it a moment to settle before playing.<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 10000});
-            new Notification({ "id": "mp3", "title": "Recording MP3s is broken.", "html": "You can no longer record MP3s.", "duration": 10000 });
+            new Notification({
+                "id": "mp3",
+                "title": "Recording MP3s is broken.",
+                "html": "You can no longer record MP3s.",
+                "duration": 10000
+            });
             // } else {
             // 	// stop recording
             // 	var mp3buf = encoder.flush();
@@ -2685,7 +2803,11 @@ $(function () {
             // on/off button
             (function () {
                 var button = document.createElement("input");
-                mixin(button, { type: "button", value: "ON/OFF", className: enableSynth ? "switched-on" : "switched-off" });
+                mixin(button, {
+                    type: "button",
+                    value: "ON/OFF",
+                    className: enableSynth ? "switched-on" : "switched-off"
+                });
                 button.addEventListener("click", function (evt) {
                     enableSynth = !enableSynth;
                     button.className = enableSynth ? "switched-on" : "switched-off";
@@ -2706,7 +2828,11 @@ $(function () {
             })();
             // mix
             var knob = document.createElement("canvas"); // TODO replace any
-            mixin(knob, { width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob" });
+            mixin(knob, {
+                width: 32 * window.devicePixelRatio,
+                height: 32 * window.devicePixelRatio,
+                className: "knob"
+            });
             html.appendChild(knob);
             knob = new Knob(knob, 0, 100, 0.1, 50, "mix", "%");
             knob.canvas.style.width = "32px";
@@ -2721,7 +2847,10 @@ $(function () {
             (function () {
                 osc1_type = osc_types[osc_type_index];
                 var button = document.createElement("input");
-                mixin(button, { type: "button", value: osc_types[osc_type_index] });
+                mixin(button, {
+                    type: "button",
+                    value: osc_types[osc_type_index]
+                });
                 button.addEventListener("click", function (evt) {
                     if (++osc_type_index >= osc_types.length)
                         osc_type_index = 0;
@@ -2732,7 +2861,11 @@ $(function () {
             })();
             // osc1 attack
             var knob = document.createElement("canvas"); // TODO replace any
-            mixin(knob, { width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob" });
+            mixin(knob, {
+                width: 32 * window.devicePixelRatio,
+                height: 32 * window.devicePixelRatio,
+                className: "knob"
+            });
             html.appendChild(knob);
             knob = new Knob(knob, 0, 1, 0.001, osc1_attack, "osc1 attack", "s");
             knob.canvas.style.width = "32px";
@@ -2743,7 +2876,11 @@ $(function () {
             knob.emit("change", knob);
             // osc1 decay
             var knob = document.createElement("canvas"); // TODO replace any
-            mixin(knob, { width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob" });
+            mixin(knob, {
+                width: 32 * window.devicePixelRatio,
+                height: 32 * window.devicePixelRatio,
+                className: "knob"
+            });
             html.appendChild(knob);
             knob = new Knob(knob, 0, 2, 0.001, osc1_decay, "osc1 decay", "s");
             knob.canvas.style.width = "32px";
@@ -2753,7 +2890,11 @@ $(function () {
             });
             knob.emit("change", knob);
             var knob = document.createElement("canvas"); // TODO replace any
-            mixin(knob, { width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob" });
+            mixin(knob, {
+                width: 32 * window.devicePixelRatio,
+                height: 32 * window.devicePixelRatio,
+                className: "knob"
+            });
             html.appendChild(knob);
             knob = new Knob(knob, 0, 1, 0.001, osc1_sustain, "osc1 sustain", "x");
             knob.canvas.style.width = "32px";
@@ -2764,7 +2905,11 @@ $(function () {
             knob.emit("change", knob);
             // osc1 release
             var knob = document.createElement("canvas"); // TODO replace any
-            mixin(knob, { width: 32 * window.devicePixelRatio, height: 32 * window.devicePixelRatio, className: "knob" });
+            mixin(knob, {
+                width: 32 * window.devicePixelRatio,
+                height: 32 * window.devicePixelRatio,
+                className: "knob"
+            });
             html.appendChild(knob);
             knob = new Knob(knob, 0, 2, 0.001, osc1_release, "osc1 release", "s");
             knob.canvas.style.width = "32px";
@@ -2777,7 +2922,12 @@ $(function () {
             div.innerHTML = "<br><br><br><br><center>this space intentionally left blank</center><br><br><br><br>";
             html.appendChild(div);
             // notification
-            notification = new Notification({ title: "Synthesize", html: html, duration: -1, target: "#synth-btn" });
+            notification = new Notification({
+                title: "Synthesize",
+                html: html,
+                duration: -1,
+                target: "#synth-btn"
+            });
             notification.on("close", function () {
                 var tip = document.getElementById("tooltip");
                 if (tip)

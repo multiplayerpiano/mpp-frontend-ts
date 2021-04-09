@@ -10,9 +10,9 @@ class Color {
 	map = {};
 	
 	constructor (...a: Array<string> | Array<number>) {
-		var r: number, g: number, b: number;
+		let r: number, g: number, b: number;
 		if (arguments.length === 1) {
-			var hexa = arguments[0].toLowerCase;
+			let hexa = arguments[0].toLowerCase;
 			hexa = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hexa);
 			if(hexa && hexa.length === 4) {
 				r = parseInt(hexa[1], 16);
@@ -31,7 +31,7 @@ class Color {
 	}
 
 	distance(color: Color) {
-		var d = <number> 0;
+		let d = <number> 0;
 		d += Math.pow(this.r - color.r, 2);
 		d += Math.pow(this.g - color.g, 2);
 		d += Math.pow(this.b - color.b, 2);
@@ -51,7 +51,7 @@ class Color {
 	}
 
 	toHexa() {
-		var r = (~~this.r || 0).toString(16), g = (~~this.g || 0).toString(16), b = (~~this.b || 0).toString(16);
+		let r = <string> (~~this.r || 0).toString(16), g = (~~this.g || 0).toString(16), b = (~~this.b || 0).toString(16);
 		if(r.length == 1) r = "0" + r;
 		if(g.length == 1) g = "0" + g;
 		if(b.length == 1) b = "0" + b;
@@ -59,17 +59,16 @@ class Color {
 	}
 
 	getName() {
-		var hexa = this.toHexa();
-		var low = 256;
-		var name;
-		for(var n in Color.map) {
+		let low = <number> 256;
+		let name = <string> "";
+		for(let n in Color.map) {
 			if(!Color.map.hasOwnProperty(n))
 				continue;
-			var color = Color.map[n];
+			let color = <Color> Color.map[n];
 			if(color.r === this.r && color.g === this.g && color.b === this.b) {
 				return n;
 			}
-			var dist = this.distance(color);
+			let dist = this.distance(color);
 			if(dist < low) {
 				low = dist;
 				name = n;

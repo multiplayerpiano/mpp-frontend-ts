@@ -214,6 +214,7 @@ class Client extends EventEmitter {
     }
 
     isSupported() {
+        //useless
         return true;
     }
 
