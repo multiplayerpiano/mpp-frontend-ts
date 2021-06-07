@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "strictNullChecks": true,
+        "noImplicitAny": true,
         "module": "none",
         "outDir": "build/",
         "lib": [
