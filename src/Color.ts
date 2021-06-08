@@ -8,9 +8,9 @@ class Color {
 	g: number;
 	b: number;
 	
-	constructor(args: string | [number, number, number]) {
-		if (typeof args === "string") {
-			let hexa = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(args);
+	constructor(...args: [string] | [number, number, number]) {
+		if (args.length === 1) {
+			let hexa = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(args[0]);
 			if (hexa && hexa.length === 4) {
 				this.r = parseInt(hexa[1], 16);
 				this.g = parseInt(hexa[2], 16);

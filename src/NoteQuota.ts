@@ -10,14 +10,14 @@ class NoteQuota {
 	static PARAMS_RIDICULOUS: Quota = {allowance: 600, max: 1800};
 	static PARAMS_OFFLINE: Quota = {allowance: 8000, max: 24000, maxHistLen: 3};
 
-	cb: Function;
+	cb: (points: number) => void;
 	allowance: number;
 	max: number;
 	maxHistLen: number;
 	points: number;
 	history: Array<any>;
 
-	constructor(cb: Function) {
+	constructor(cb: (points: number) => void) {
 		this.cb = cb;
 		this.setParams();
 		this.resetPoints();

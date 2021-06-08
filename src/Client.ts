@@ -4,13 +4,23 @@ interface Participant {
 	color?: string;
 	name?: string;
 	_id?: string;
-	id: string;
+	id?: string;
 	nameDiv?: HTMLElement;
 	cursorDiv?: HTMLElement;
+	displayX?: number;
+	displayY?: number;
 }
 
 interface Channel {
-	
+	_id: string;
+	count?: number;
+	crown?: {
+		participantId: string;
+		time: number;
+		endPos: {x: number; y: number};
+		startPos: {x: number; y: number};
+	};
+	settings: ChannelSettings
 }
 
 interface ChannelSettings {
@@ -20,10 +30,19 @@ interface ChannelSettings {
 	crownsolo?: boolean;
 	lobby?: boolean;
 	visible?: boolean;
+	'no cussing'?: boolean;
 }
 
 interface Note {
-	
+	d?: number;
+	s?: number;
+	n: string;
+	v?: number;
+}
+
+interface ChatMessage {
+	a: string;
+	p: Participant;
 }
 
 interface InMessageHi {
@@ -46,15 +65,7 @@ interface InMessageCh {
 		_id: string;
 		name: string;
 	}[];
-	ch: {
-		_id: string;
-		count?: number;
-		crown?: {
-			participantId: string;
-			time: number;
-		};
-		settings: ChannelSettings
-	};
+	ch: Channel;
 }
 interface InMessageP {
 	m: "p";
@@ -75,6 +86,28 @@ interface InMessageBye {
 	m: "bye";
 	p: string;
 }
+interface InMessageN {
+	m: "n";
+	t: number;
+	p: string;
+	n: Note[];
+}
+interface InMessageNq {
+	m: "nq";
+	allowance: number;
+	max: number;
+}
+interface InMessageLs {
+	m: "ls";
+	u: (Channel & {banned: boolean})[];
+}
+interface InMessageC {
+	m: "c";
+	c: ChatMessage[];
+}
+interface InMessageA extends ChatMessage {
+	m: "a";
+}
 
 interface InMessages {
 	"hi": InMessageHi;
@@ -83,6 +116,11 @@ interface InMessages {
 	"p": InMessageP;
 	"m": InMessageM;
 	"bye": InMessageBye;
+	"n": InMessageN;
+	"nq": InMessageNq;
+	"ls": InMessageLs;
+	"c": InMessageC;
+	"a": InMessageA;
 }
 
 interface OutMessageHi {
@@ -109,14 +147,50 @@ interface OutMessageKickban {
 }
 interface OutMessageChown {
 	m: "chown";
-	id: string;
+	id?: string;
 }
 interface OutMessageN {
 	m: "n";
 	t: number;
 	n: Note[];
 }
-type OutMessage = OutMessageHi | OutMessageT | OutMessageCh | OutMessageUserset | OutMessageKickban | OutMessageChown | OutMessageN;
+interface OutMessageM {
+	m: "m";
+	x: number;
+	y: number;
+}
+interface OutMessageChset {
+	m: "chset";
+	set: ChannelSettings;
+}
+interface OutMessageMinusLs {
+	m: "-ls";
+}
+interface OutMessagePlusLs {
+	m: "+ls";
+}
+interface OutMessageA {
+	m: "a";
+	message: string;
+}
+interface OutMessageDevices {
+	m: "devices";
+	list: any;
+}
+type OutMessage =
+	OutMessageHi |
+	OutMessageT |
+	OutMessageCh |
+	OutMessageUserset |
+	OutMessageKickban |
+	OutMessageChown |
+	OutMessageN |
+	OutMessageM |
+	OutMessageChset |
+	OutMessageMinusLs |
+	OutMessagePlusLs |
+	OutMessageA |
+	OutMessageDevices;
 
 declare interface Client {
 	on<U extends keyof InMessages>(event: U, listener: (msg: InMessages[U]) => void): void;
@@ -140,16 +214,17 @@ declare interface Client {
 	
 	on(event: "count", listener: (count: number) => void): void;
 	emit(event: "count", count: number): void;
+	on(event: "notification", listener: (input: NotificationInput) => void): void;
+	emit(event: "notification", input: NotificationInput): void;
 }
 
 class Client extends EventEmitter {
-	[x: string]: any;
 	ws?: WebSocket;
 	uri: string;
 	serverTimeOffset: number;
 	user?: Participant;
 	participantId?: string;
-	channel?: any;
+	channel?: Channel;
 	ppl: Record<string, Participant>;
 	connectionTime?: number;
 	connectionAttempts: number;
@@ -157,13 +232,13 @@ class Client extends EventEmitter {
 	desiredChannelSettings?: ChannelSettings;
 	pingInterval?: number;
 	canConnect: boolean;
-	noteBuffer: Array<any>;
+	noteBuffer: Note[];
 	noteBufferTime: number;
 	noteFlushInterval?: number;
 	['🐈']: number;
-	offlineParticipant: Participant;
 	autoPickupCrown: boolean;
 	offlineChannelSettings: ChannelSettings = {color:"#ecfaed"};
+	offlineParticipant: Participant = {_id: "", name: "", color: "#777"};
 
 	constructor(uri: string) {
 		super();
@@ -195,6 +270,91 @@ class Client extends EventEmitter {
 		this.autoPickupCrown = true;
 
 		this.bindEventListeners();
+	}
+
+	isSupported(): boolean {
+		return typeof WebSocket === "function";
+	}
+
+	isConnected(): boolean {
+		return this.isSupported() && this.ws !== undefined && this.ws.readyState === WebSocket.OPEN;
+	}
+	
+	isConnecting(): boolean {
+		return this.isSupported() && this.ws !== undefined && this.ws.readyState === WebSocket.CONNECTING;
+	}
+
+	start() {
+		this.canConnect = true;
+		this.connect();
+	}
+
+	stop() {
+		this.canConnect = false;
+		this.ws!.close();
+	}
+
+	connect() {
+		if (!this.canConnect || !this.isSupported() || this.isConnected() || this.isConnecting())
+			return;
+		this.emit("status", "Connecting...");
+		this.ws = new WebSocket(this.uri);
+		let self = this;
+		this.ws.addEventListener("close", function(evt: CloseEvent) {
+			self.user = undefined;
+			self.participantId = undefined;
+			self.channel = undefined;
+			self.setParticipants([]);
+			clearInterval(self.pingInterval);
+			clearInterval(self.noteFlushInterval);
+	
+			self.emit("disconnect", evt);
+			self.emit("status", "Offline mode");
+	
+			// reconnect!
+			if (self.connectionTime) {
+				self.connectionTime = undefined;
+				self.connectionAttempts = 0;
+			} else {
+				++self.connectionAttempts;
+			}
+			let ms_lut = [50, 2950, 7000, 10000];
+			let idx = self.connectionAttempts;
+			if (idx >= ms_lut.length) idx = ms_lut.length - 1;
+			let ms = ms_lut[idx];
+			setTimeout(self.connect.bind(self), ms);
+		});
+		this.ws.addEventListener("error", function(err: Event) {
+			self.emit("wserror", err);
+			self.ws!.close(); // self.ws.emit("close");
+		});
+		this.ws.addEventListener("open", function(evt: Event) {
+			self.connectionTime = Date.now();
+			self.sendArray([{"m": "hi", "🐈": self['🐈']++ || undefined}]);
+			self.pingInterval = setInterval(function() {
+				self.sendArray([{m: "t", e: Date.now()}]);
+			}, 20000);
+			//self.sendArray([{m: "t", e: Date.now()}]);
+			self.noteBuffer = [];
+			self.noteBufferTime = 0;
+			self.noteFlushInterval = setInterval(function() {
+				if(self.noteBufferTime && self.noteBuffer.length > 0) {
+					self.sendArray([{m: "n", t: self.noteBufferTime + self.serverTimeOffset, n: self.noteBuffer}]);
+					self.noteBufferTime = 0;
+					self.noteBuffer = [];
+				}
+			}, 200);
+	
+			self.emit("connect");
+			self.emit("status", "Joining channel...");
+		});
+		this.ws.addEventListener("message", function(evt: any) {
+			let transmission = JSON.parse(evt.data);
+			for (let i = 0; i < transmission.length; i++) {
+				let msg = transmission[i];
+				self.emit(msg.m, msg);
+			}
+		});
 	}
 
 	bindEventListeners() {
@@ -256,9 +416,106 @@ class Client extends EventEmitter {
 		});
 	}
 
+	send(raw: string) {
+		if (this.isConnected()) this.ws!.send(raw);
+	}
+
+	sendArray(arr: OutMessage[]) {
+		this.send(JSON.stringify(arr));
+	}
+
+	setChannel(id?: string, set?: ChannelSettings) {
+		this.desiredChannelId = id || this.desiredChannelId || "lobby";
+		this.desiredChannelSettings = set || this.desiredChannelSettings || undefined;
+		this.sendArray([{m: "ch", _id: this.desiredChannelId, set: this.desiredChannelSettings}]);
+	}
+
+	getChannelSetting<Key extends keyof ChannelSettings>(key: Key): ChannelSettings[Key] {
+		if (!this.isConnected() || !this.channel || !this.channel.settings) {
+			return this.offlineChannelSettings[key];
+		} 
+		return this.channel.settings[key];
+	}
+	
+	setChannelSettings(settings: ChannelSettings) {
+		if (!this.isConnected() || !this.channel || !this.channel.settings) {
+			return;
+		}
+		if (this.desiredChannelSettings) {
+			for (let key in settings) {
+				(this.desiredChannelSettings as any)[key] = (settings as any)[key];
+			}
+			this.sendArray([{m: "chset", set: this.desiredChannelSettings}]);
+		}
+	}
+
+	getOwnParticipant() {
+		return this.findParticipantById(this.participantId!);
+	}
+
+	setParticipants(ppl: Participant[]) {
+		for (let id in this.ppl) {
+			if (!this.ppl.hasOwnProperty(id)) continue;
+			let found = false;
+			for (let j = 0; j < ppl.length; j++) {
+				if (ppl[j].id === id) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				this.removeParticipant(id);
+			}
+		}
+		// update all
+		for (let i = 0; i < ppl.length; i++) {
+			this.participantUpdate(ppl[i]);
+		}
+	}
+
+	countParticipants(): number {
+		let count = 0;
+		for (let i in this.ppl) {
+			if (this.ppl.hasOwnProperty(i)) ++count;
+		}
+		return count;
+	}
+
+	participantUpdate(update: Participant) {
+		let part = this.ppl[update.id!] || null;
+		if (part === null) {
+			part = update;
+			this.ppl[part.id!] = part;
+			this.emit("participant added", part);
+			this.emit("count", this.countParticipants());
+		} else {
+			if (update.x) part.x = update.x;
+			if (update.y) part.y = update.y;
+			if (update.color) part.color = update.color;
+			if (update.name) part.name = update.name;
+		}
+	}
+
+	removeParticipant(id: string) {
+		if (this.ppl.hasOwnProperty(id)) {
+			let part = this.ppl[id];
+			delete this.ppl[id];
+			this.emit("participant removed", part);
+			this.emit("count", this.countParticipants());
+		}
+	}
+
 	findParticipantById(id: string): Participant {
 		return this.ppl[id] || this.offlineParticipant;
-	};
+	}
+
+	isOwner() {
+		return this.channel && this.channel.crown && this.channel.crown.participantId === this.participantId;
+	}
+
+	preventsPlaying(): boolean {
+		return this.isConnected() && !this.isOwner() && this.getChannelSetting("crownsolo") === true;
+	}
 
 	receiveServerTime(time: number, echo: any) {
 		let now = Date.now();
@@ -284,169 +541,31 @@ class Client extends EventEmitter {
 									// not smooth:
 		//if(echo) this.serverTimeOffset += echo - now;	// mostly round trip time offset
 	}
-
-	setChannel(id?: string, set?: ChannelSettings) {
-		this.desiredChannelId = id || this.desiredChannelId || "lobby";
-		this.desiredChannelSettings = set || this.desiredChannelSettings || undefined;
-		this.sendArray([{m: "ch", _id: this.desiredChannelId, set: this.desiredChannelSettings}]);
-	}
-
-	sendArray(arr: OutMessage[]) {
-		this.send(JSON.stringify(arr));
-	}
-
-	setParticipants(ppl: Participant[]) {
-		for (let id in this.ppl) {
-			if (!this.ppl.hasOwnProperty(id)) continue;
-			let found = false;
-			for (let j = 0; j < ppl.length; j++) {
-				if (ppl[j].id === id) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				this.removeParticipant(id);
-			}
-		}
-		// update all
-		for (let i = 0; i < ppl.length; i++) {
-			this.participantUpdate(ppl[i]);
-		}
-	}
-
-	send(raw: string) {
-		if (this.isConnected()) this.ws!.send(raw);
-	}
-
-	isConnected(): boolean {
-		return this.isSupported() && this.ws !== undefined && this.ws.readyState === WebSocket.OPEN;
-	}
 	
-	isConnecting(): boolean {
-		return this.isSupported() && this.ws !== undefined && this.ws.readyState === WebSocket.CONNECTING;
-	}
-
-	isSupported(): boolean {
-		//useless
-		return true;
-	}
-
-	start() {
-		this.canConnect = true;
-		this.connect();
-	}
-
-	stop() {
-		this.canConnect = false;
-		this.ws!.close();
-	}
-
-	connect() {
-		if (!this.canConnect || !this.isSupported() || this.isConnected() || this.isConnecting())
-			return;
-		this.emit("status", "Connecting...");
-		this.ws = new WebSocket(this.uri);
-		var self = this;
-		this.ws.addEventListener("close", function(evt: CloseEvent) {
-			self.user = undefined;
-			self.participantId = undefined;
-			self.channel = undefined;
-			self.setParticipants([]);
-			clearInterval(self.pingInterval);
-			clearInterval(self.noteFlushInterval);
-	
-			self.emit("disconnect", evt);
-			self.emit("status", "Offline mode");
-	
-			// reconnect!
-			if (self.connectionTime) {
-				self.connectionTime = undefined;
-				self.connectionAttempts = 0;
+	startNote(note: string, vel?: number) {
+		if (this.isConnected()) {
+			vel = typeof vel === "undefined" ? undefined : +vel.toFixed(3);
+			if (!this.noteBufferTime) {
+				this.noteBufferTime = Date.now();
+				this.noteBuffer.push({n: note, v: vel});
 			} else {
-				++self.connectionAttempts;
+				this.noteBuffer.push({d: Date.now() - this.noteBufferTime, n: note, v: vel});
 			}
-			var ms_lut = [50, 2950, 7000, 10000];
-			var idx = self.connectionAttempts;
-			if (idx >= ms_lut.length) idx = ms_lut.length - 1;
-			var ms = ms_lut[idx];
-			setTimeout(self.connect.bind(self), ms);
-		});
-		this.ws.addEventListener("error", function(err: Event) {
-			self.emit("wserror", err);
-			self.ws!.close(); // self.ws.emit("close");
-		});
-		this.ws.addEventListener("open", function(evt: any) {
-			self.connectionTime = Date.now();
-			self.sendArray([{"m": "hi", "🐈": self['🐈']++ || undefined}]);
-			self.pingInterval = setInterval(function() {
-				self.sendArray([{m: "t", e: Date.now()}]);
-			}, 20000);
-			//self.sendArray([{m: "t", e: Date.now()}]);
-			self.noteBuffer = [];
-			self.noteBufferTime = 0;
-			self.noteFlushInterval = setInterval(function() {
-				if(self.noteBufferTime && self.noteBuffer.length > 0) {
-					self.sendArray([{m: "n", t: self.noteBufferTime + self.serverTimeOffset, n: self.noteBuffer}]);
-					self.noteBufferTime = 0;
-					self.noteBuffer = [];
-				}
-			}, 200);
+		}
+	};
 	
-			self.emit("connect");
-			self.emit("status", "Joining channel...");
-		});
-		this.ws.addEventListener("message", function(evt: any) {
-			var transmission = JSON.parse(evt.data);
-			for (let i = 0; i < transmission.length; i++) {
-				let msg = transmission[i];
-				self.emit(msg.m, msg);
+	stopNote(note: string) {
+		if (this.isConnected()) {
+			if (!this.noteBufferTime) {
+				this.noteBufferTime = Date.now();
+				this.noteBuffer.push({n: note, s: 1});
+			} else {
+				this.noteBuffer.push({d: Date.now() - this.noteBufferTime, n: note, s: 1});
 			}
-		});
-	}
-
-	removeParticipant(id: string) {
-		if (this.ppl.hasOwnProperty(id)) {
-			let part = this.ppl[id];
-			delete this.ppl[id];
-			this.emit("participant removed", part);
-			this.emit("count", this.countParticipants());
 		}
-	}
-
-	participantUpdate(update: Participant) {
-		let part = this.ppl[update.id] || null;
-		if (part === null) {
-			part = update;
-			this.ppl[part.id] = part;
-			this.emit("participant added", part);
-			this.emit("count", this.countParticipants());
-		} else {
-			if (update.x) part.x = update.x;
-			if (update.y) part.y = update.y;
-			if (update.color) part.color = update.color;
-			if (update.name) part.name = update.name;
-		}
-	}
-
-	preventsPlaying(): boolean {
-		return this.isConnected() && !this.isOwner() && this.getChannelSetting("crownsolo") === true;
-	}
-
-	getChannelSetting<Key extends keyof ChannelSettings>(key: Key): ChannelSettings[Key] {
-		if (!this.isConnected() || !this.channel || !this.channel.settings) {
-			return this.offlineChannelSettings[key];
-		} 
-		return this.channel.settings[key];
-	}
-
-	countParticipants(): number {
-		let count = 0;
-		for (let i in this.ppl) {
-			if (this.ppl.hasOwnProperty(i)) ++count;
-		}
-		return count;
-	}
+	};
+	
+	// Where do these methods come from???
 
 	setName(str: string) {
 		if (str.length > 40) return;
@@ -465,27 +584,19 @@ class Client extends EventEmitter {
 	}
 
 	pickupCrown() {
-		this.sendArray([{m:'chown', id: this.getOwnParticipant().id}]);
-	}
-
-	isOwner() {
-		return this.channel && this.channel.crown && this.channel.crown.participantId === this.participantId;
+		this.sendArray([{m:'chown', id: this.getOwnParticipant().id!}]);
 	}
 
 	getParticipant(str: string) {
 		let ret;
 		for (let id in this.ppl) {
 			let part = this.ppl[id];
-			if (part.name!.toLowerCase().includes(str.toLowerCase()) || part._id!.toLowerCase().includes(str.toLowerCase()) || part.id.toLowerCase().includes(str.toLowerCase())) {
+			if (part.name!.toLowerCase().includes(str.toLowerCase()) || part._id!.toLowerCase().includes(str.toLowerCase()) || part.id!.toLowerCase().includes(str.toLowerCase())) {
 				ret = part;
 			}
 		}
 		if (typeof ret !== "undefined") {
 			return ret;
 		}
-	}
-
-	getOwnParticipant() {
-		return this.findParticipantById(this.participantId!);
 	}
 }
