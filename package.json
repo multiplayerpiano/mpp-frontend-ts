@@ -9,11 +9,11 @@
   "author": "Hri7566",
   "license": "ISC",
   "dependencies": {
-    "@types/webmidi": "^2.0.4",
     "lamejs": "^1.2.0",
     "typescript": "^4.1.5"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.5"
+    "@types/jquery": "^3.5.5",
+    "@types/webmidi": "^2.0.4"
   }
 }
