@@ -3,11 +3,12 @@
         "strictNullChecks": true,
         "noImplicitAny": true,
         "module": "none",
-        "outDir": "build/",
+        "outDir": "dist/js/",
         "lib": [
             "es7",
             "dom"
-        ]
+        ],
+        "target": "es5"
     },
     "include": [
         "src/**/*"

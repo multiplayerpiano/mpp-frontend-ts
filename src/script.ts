@@ -1133,7 +1133,7 @@ $(function() {
 
 
 
-
+	/*
 	function getParameterByName(name: string, url = window.location.href): string | null {
 		name = name.replace(/[\[\]]/g, "\\$&");
 		let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
@@ -1142,17 +1142,17 @@ $(function() {
 		if (!results[2]) return "";
 		return decodeURIComponent(results[2].replace(/\+/g, " "));
 	}
-
+	*/
 	// internet science
 
 	////////////////////////////////////////////////////////////////
 
-	let channel_id = decodeURIComponent(getParameterByName("c")!);
+	let channel_id = decodeURIComponent(window.location.pathname/*getParameterByName("c")!*/);
 	if (channel_id.substr(0, 1) === "/") channel_id = channel_id.substr(1);
 	if (channel_id === "") channel_id = "lobby";
 
 	let wssport = window.location.hostname === "www.multiplayerpiano.com" ? 443 : 8443;
-	let gClient = new Client("wss://" + window.location.hostname + ":" + wssport);
+	let gClient = new Client((window.location.hostname.includes("localhost") ?  "ws://" : "wss://") + window.location.hostname + ":" + wssport);
 	gClient.setChannel(channel_id);
 	gClient.start();
 
