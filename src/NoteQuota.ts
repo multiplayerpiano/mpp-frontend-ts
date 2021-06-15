@@ -4,7 +4,7 @@ interface Quota {
 	maxHistLen?: number
 }
 
-class NoteQuota {
+export class NoteQuota {
 	static PARAMS_LOBBY: Quota = {allowance: 200, max: 600};
 	static PARAMS_NORMAL: Quota = {allowance: 400, max: 1200};
 	static PARAMS_RIDICULOUS: Quota = {allowance: 600, max: 1800};
@@ -85,5 +85,3 @@ class NoteQuota {
 		}
 	}
 }
-
-(window as any).NoteQuota = NoteQuota;

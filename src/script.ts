@@ -1,9 +1,10 @@
 import * as $ from 'jquery';
-import "./util.ts";
-import "./Client.ts";
-import "./Color.ts";
+import { EventEmitter } from "events";
+import { Client, InMessageM, Participant, ChannelSettings, ChatMessage } from "./Client";
+import { Knob, mixin } from "./util";
+import { Color } from "./Color";
 import "./ebsprite.js";
-import "./NoteQuota.ts";
+import { NoteQuota } from "./NoteQuota";
 
 
 interface NotificationInput {
@@ -247,10 +248,9 @@ $(function() {
 			constructor() {
 				super();
 				this.threshold = 1000;
-				//TODO: How to typescriptify workerTimer.js?
-				this.worker = new Worker("/js/workerTimer.js");
-				let self = this;
-				this.worker.onmessage = function(event) {
+				//this.worker = new Worker("/js/workerTimer.js");
+				//let self = this;
+				/*this.worker.onmessage = function(event) {
 					if (event.data.args)
 						if (event.data.args.action === 0) {
 							self.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id);
@@ -258,6 +258,16 @@ $(function() {
 					else {
 						self.actualStop(event.data.args.id, event.data.args.time, event.data.args.part_id);
 					}
+				}*/
+			}
+			audioEngineOnMessage(event: any) {
+				let self = this;
+				if (event.data.args)
+					if (event.data.args.action === 0) {
+						self.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id);
+					}
+				else {
+					self.actualStop(event.data.args.id, event.data.args.time, event.data.args.part_id);
 				}
 			}
 			init(cb?: Function): this {
@@ -357,7 +367,7 @@ $(function() {
 				let delay = delay_ms - this.threshold;
 				if (delay <= 0) this.actualPlay(id, vol, time, part_id);
 				else {
-					this.worker.postMessage({
+					this.audioEngineOnMessage({
 						delay: delay,
 						args: {
 							action: 0 /*play*/,
@@ -366,7 +376,7 @@ $(function() {
 							time: time,
 							part_id: part_id
 						}
-					}); // but start scheduling right before play.
+					}) // but start scheduling right before play.
 				}
 			}
 			actualStop(id: string, time: number, part_id: string) {
@@ -390,7 +400,7 @@ $(function() {
 				let delay = delay_ms - this.threshold;
 				if (delay <= 0) this.actualStop(id, time, part_id);
 				else {
-					this.worker.postMessage({
+					this.audioEngineOnMessage({
 						delay: delay,
 						args: {
 							action: 1 /*stop*/,
@@ -3238,7 +3248,6 @@ $(function() {
 ////////////////////////////////////////////////////////////////
 
 // analytics
-(window as any).google_analytics_uacct = "UA-882009-7";
 var _gaq: any = _gaq || [];
 _gaq.push(['_setAccount', 'UA-882009-7']);
 _gaq.push(['_trackPageview']);

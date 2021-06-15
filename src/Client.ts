@@ -1,4 +1,5 @@
-interface Participant {
+import { EventEmitter } from "events";
+export interface Participant {
 	x?: number;
 	y?: number;
 	color?: string;
@@ -23,7 +24,7 @@ interface Channel {
 	settings: ChannelSettings
 }
 
-interface ChannelSettings {
+export interface ChannelSettings {
 	chat?: boolean;
 	color?: string;
 	color2?: string;
@@ -50,7 +51,7 @@ interface Note {
 	v?: number;
 }
 
-interface ChatMessage {
+export interface ChatMessage {
 	a: string;
 	p: Participant;
 }
@@ -86,7 +87,7 @@ interface InMessageP {
 	x?: number;
 	y?: number;
 }
-interface InMessageM {
+export interface InMessageM {
 	m: "m";
 	id: string;
 	x: number;
@@ -202,9 +203,9 @@ type OutMessage =
 	OutMessageA |
 	OutMessageDevices;
 
-declare interface Client {
-	on<U extends keyof InMessages>(event: U, listener: (msg: InMessages[U]) => void): void;
-	emit<U extends keyof InMessages>(event: U, msg: InMessages[U]): void;
+export declare interface Client {
+	on<U extends keyof InMessages>(event: U, listener: (msg: InMessages[U]) => void): this;
+	emit<U extends keyof InMessages>(event: U, msg: InMessages[U]): boolean;
 	
 	on(event: "status", listener: (status: string) => void): void;
 	emit(event: "status", status: string): void;
@@ -228,7 +229,7 @@ declare interface Client {
 	emit(event: "notification", input: NotificationInput): void;
 }
 
-class Client extends EventEmitter {
+export class Client extends EventEmitter {
 	ws?: WebSocket;
 	uri: string;
 	serverTimeOffset: number;
@@ -610,4 +611,3 @@ class Client extends EventEmitter {
 		}
 	}
 }
-(window as any).Client = Client;

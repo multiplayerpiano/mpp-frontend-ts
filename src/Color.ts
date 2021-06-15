@@ -1,4 +1,4 @@
-class Color {
+export class Color {
 	static map: Record<string, Color> = {};
 	/*static addToMap(hexa: string, name: string) {
 		Color.map[name] = new Color(hexa);
@@ -1037,5 +1037,3 @@ Color.map = {
 	"Zinnwaldite brown": new Color("#2C1608"),
 	"Zomp": new Color("#39A78E")
 };
-
-(window as any).Color = Color; //* Moved global "export" to bottom - Hri7566

@@ -1,4 +1,5 @@
-function mixin(obj1: any, obj2: any) {
+import { EventEmitter } from "events";
+export function mixin(obj1: any, obj2: any) {
 	for (let i in obj2) {
 		if (obj2.hasOwnProperty(i)) {
 			obj1[i] = obj2[i];
@@ -6,7 +7,7 @@ function mixin(obj1: any, obj2: any) {
 	}
 }
 
-class EventEmitter {
+/*class EventEmitter {
 	_events: Record<string, Function[]>;
 	
 	constructor() {
@@ -38,7 +39,7 @@ class EventEmitter {
 			fns[i].apply(this, args);
 		}
 	}
-}
+}*/
 
 function hashFnv32a(str: string, asString: false, seed: number): number;
 function hashFnv32a(str: string, asString: true, seed: number): string;
@@ -63,7 +64,7 @@ function round(number: number, increment: number, offset: number): number {
 
 // knob
 
-class Knob extends EventEmitter {
+export class Knob extends EventEmitter {
 	min: number;
 	max: number;
 	step: number;
@@ -261,4 +262,3 @@ class Knob extends EventEmitter {
 		};
 	}
 }
-(window as any).EventEmitter = EventEmitter;
