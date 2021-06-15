@@ -2,13 +2,13 @@
     "compilerOptions": {
         "strictNullChecks": true,
         "noImplicitAny": true,
-        "module": "none",
+        //"module": "none",
         "outDir": "dist/js/",
         "lib": [
             "es7",
             "dom"
         ],
-        "target": "es5"
+        "target": "es3"
     },
     "include": [
         "src/**/*"

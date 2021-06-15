@@ -1,3 +1,11 @@
+import * as $ from 'jquery';
+import "./util.ts";
+import "./Client.ts";
+import "./Color.ts";
+import "./ebsprite.js";
+import "./NoteQuota.ts";
+
+
 interface NotificationInput {
 	id?: string,
 	title?: string,
@@ -239,7 +247,8 @@ $(function() {
 			constructor() {
 				super();
 				this.threshold = 1000;
-				this.worker = new Worker("/workerTimer.js");
+				//TODO: How to typescriptify workerTimer.js?
+				this.worker = new Worker("/js/workerTimer.js");
 				let self = this;
 				this.worker.onmessage = function(event) {
 					if (event.data.args)
@@ -1336,7 +1345,7 @@ $(function() {
 						});
 					}
 					clearInterval(countdown_interval);
-					countdown_interval = setInterval(function () {
+					countdown_interval = window.setInterval(function () {
 						let time = Date.now();
 						if (time >= land_time) {
 							let ms = avail_time - time;
@@ -2076,7 +2085,7 @@ $(function() {
 	let gKnowsYouCanUseKeyboardNotification: Notification | undefined;
 	if (localStorage && localStorage.knowsYouCanUseKeyboard) gKnowsYouCanUseKeyboard = true;
 	if (!gKnowsYouCanUseKeyboard) {
-		gKnowsYouCanUseKeyboardTimeout = setTimeout(function () {
+		gKnowsYouCanUseKeyboardTimeout = window.setTimeout(function () {
 			gKnowsYouCanUseKeyboardNotification = new Notification({
 				title: "Did you know!?!",
 				text: "You can play the piano with your keyboard, too.  Try it!",

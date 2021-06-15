@@ -261,3 +261,4 @@ class Knob extends EventEmitter {
 		};
 	}
 }
+(window as any).EventEmitter = EventEmitter;

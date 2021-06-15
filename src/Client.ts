@@ -33,6 +33,16 @@ interface ChannelSettings {
 	'no cussing'?: boolean;
 }
 
+interface NotificationInput {
+	id?: string,
+	title?: string,
+	text?: string,
+	html?: string | HTMLElement,
+	target?: string,
+	duration?: number
+	class?: string;
+}
+
 interface Note {
 	d?: number;
 	s?: number;
@@ -331,13 +341,13 @@ class Client extends EventEmitter {
 		this.ws.addEventListener("open", function(evt: Event) {
 			self.connectionTime = Date.now();
 			self.sendArray([{"m": "hi", "🐈": self['🐈']++ || undefined}]);
-			self.pingInterval = setInterval(function() {
+			self.pingInterval = window.setInterval(function() {
 				self.sendArray([{m: "t", e: Date.now()}]);
 			}, 20000);
 			//self.sendArray([{m: "t", e: Date.now()}]);
 			self.noteBuffer = [];
 			self.noteBufferTime = 0;
-			self.noteFlushInterval = setInterval(function() {
+			self.noteFlushInterval = window.setInterval(function() {
 				if(self.noteBufferTime && self.noteBuffer.length > 0) {
 					self.sendArray([{m: "n", t: self.noteBufferTime + self.serverTimeOffset, n: self.noteBuffer}]);
 					self.noteBufferTime = 0;
@@ -600,3 +610,4 @@ class Client extends EventEmitter {
 		}
 	}
 }
+(window as any).Client = Client;
