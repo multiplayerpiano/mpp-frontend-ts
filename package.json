@@ -7,7 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack"
   },
-  "author": "Brandon Lockaby, Bop It Freak, DayDun, Electrashave, Hri7566",
+  "author": "Brandon Lockaby",
+  "contributors": [
+    "BopItFreak",
+    "DayDun",
+    "electrashave",
+    "Hri7566"
+  ],
   "license": "ISC",
   "dependencies": {
     "jquery": "^3.6.0",
