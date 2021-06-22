@@ -1,20 +1,16 @@
 /* TODO: This needs to be seriously updated */
+/* test */
 * {
   image-rendering: pixelated;
-}
-
-* {
   margin: 0;
-}
-
-* {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -25,9 +21,6 @@ html, body {
 
 body {
   position: absolute;
-}
-
-body {
   background: #3b5054;
   /* Old browsers */
   background: -moz-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
@@ -42,8 +35,9 @@ body {
   /* IE10+ */
   background: radial-gradient(ellipse at center, #ecfafd 0%, #c5d5d8 100%);
   /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr="#ecfafd", endColorstr="#c5d5d8",GradientType=1 );
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ecfafd", endColorstr="#c5d5d8", GradientType=1);
   /* IE6-9 fallback on horizontal gradient */
+  transition: background 1000ms linear;
   -webkit-transition: background 1000ms linear;
 }
 
@@ -52,7 +46,6 @@ a {
   color: #f46;
   transition: color 0.25s;
 }
-
 a:hover {
   color: #e05;
   transition: color 0.25s;
@@ -77,7 +70,6 @@ table {
   font-size: 12px;
   width: 80%;
 }
-
 #names .name {
   float: left;
   position: relative;
@@ -91,7 +83,6 @@ table {
   cursor: pointer;
   line-height: 15px;
 }
-
 #names .name.me:after {
   content: "Me";
   position: absolute;
@@ -99,23 +90,19 @@ table {
   right: 50%;
   font-size: 10px;
 }
-
 #names .name.owner:before {
   content: url("img/crown.png");
   position: absolute;
   top: -8px;
   left: 4px;
 }
-
 #names .name.play {
   transform: translateY(-4px);
   -webkit-transform: translateY(-4px);
 }
-
 #names .name.muted-notes {
   color: #f88;
 }
-
 #names .name.muted-notes:after {
   content: "MUTE";
   position: absolute;
@@ -123,11 +110,9 @@ table {
   right: 50%;
   font-size: 8px;
 }
-
 #names .name.muted-chat {
   color: #f88;
 }
-
 #names .name.muted-chat:after {
   content: "MUTE";
   position: absolute;
@@ -144,7 +129,6 @@ table {
   overflow: hidden;
   padding-left: 1%;
 }
-
 #piano .key {
   float: left;
   width: 1.8%;
@@ -166,11 +150,9 @@ table {
   padding: 0px;
   overflow: hidden;
 }
-
 #piano .key.c, #piano .key.f {
   margin-left: 0;
 }
-
 #piano .key.sharp {
   width: 1.2%;
   height: 50%;
@@ -178,14 +160,13 @@ table {
   margin-left: -0.9%;
   position: relative;
 }
-
 #piano .key.loading {
   background: #888;
 }
-
 #piano .key.play {
   transform: translateY(1%);
   -webkit-transform: translateY(1%);
+  box-shadow: 0px 1px 2px #000;
   -webkit-box-shadow: 0px 1px 2px #000;
 }
 
@@ -221,8 +202,8 @@ table {
   margin-top: -2px;
   left: 200%;
   top: 100%;
+  transition: top 100ms, left 100ms;
 }
-
 .cursor .name {
   display: inline;
   position: relative;
@@ -237,8 +218,8 @@ table {
   white-space: nowrap;
   padding: 1px;
   font-size: 10px;
+  display: inline-block;
 }
-
 .cursor.owner .name:after {
   content: url("img/crown.png");
   position: relative;
@@ -246,16 +227,8 @@ table {
   left: 0px;
 }
 
-.cursor .name {
-  display: inline-block;
-}
-
 /* .cursor .spotlight { display: none; position: relative; left: -14px; top: -9px; width: 32px; height: 32px;
 	 border: 4px solid white; -webkit-border-radius: 100%; } */
-.cursor {
-  transition: top 100ms, left 100ms;
-}
-
 .participant-menu {
   display: none;
   position: fixed;
@@ -266,12 +239,10 @@ table {
   margin: 0px;
   border-radius: 2px;
 }
-
 .participant-menu:last-child .menu-item:hover {
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
 }
-
 .participant-menu .info {
   height: 40px;
   text-align: center;
@@ -283,23 +254,19 @@ table {
   transition: opacity 0.2s ease-out;
   user-select: text;
 }
-
 .participant-menu .info:hover {
   opacity: 1;
   transition: opacity 0.2s ease-out;
 }
-
 .participant-menu .menu-item {
   cursor: pointer;
   margin: 0px;
   padding: 15px 5px;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
-
 .participant-menu .menu-item:hover {
   background: rgba(255, 255, 255, 0.4);
 }
-
 .participant-menu .menu-item.clicked {
   background: rgba(255, 255, 255, 0.5);
 }
@@ -312,7 +279,6 @@ table {
   cursor: pointer;
   font-size: 10px;
 }
-
 #crown span {
   margin-left: 16px;
   margin-top: 2px;
@@ -328,7 +294,6 @@ table {
   pointer-events: none;
   display: none;
 }
-
 #room-notice p {
   margin: 1em;
 }
@@ -343,7 +308,8 @@ table {
   margin-bottom: 3px;
 }
 
-#room, #room * {
+#room,
+#room * {
   cursor: pointer;
 }
 
@@ -360,40 +326,33 @@ table {
   margin: 4px 24px;
   font-size: 12px;
 }
-
 #room .info {
   white-space: nowrap;
   line-height: 12px;
   overflow: hidden;
   height: 20px;
 }
-
 #room .info.lobby {
   color: #eeffbb;
 }
-
 #room .info.not-visible {
   color: #0d3761;
 }
-
 #room .info.crownsolo:after {
   content: url("img/crownsolo.png");
   position: relative;
   top: 2px;
   margin-left: 4px;
 }
-
 #room .info.no-chat:after {
   content: url("img/no-chat.png");
   position: relative;
   top: 2px;
   margin-left: 4px;
 }
-
 #room .info.banned {
   color: rgba(255, 64, 64, 0.5);
 }
-
 #room .expand {
   width: 24px;
   height: 100%;
@@ -402,7 +361,6 @@ table {
   top: 0;
   background: #aba url("img/arrow.png") no-repeat center 0%;
 }
-
 #room .more {
   display: none;
   position: absolute;
@@ -415,22 +373,18 @@ table {
   border: 1px solid #aba;
   max-height: 600px;
 }
-
-#room .more > div {
+#room .more.more > div {
   margin: 0;
   padding: 3px 6px 0px 6px;
   width: 100%;
   height: 20px;
 }
-
 #room .more .info:hover {
   background: #aba;
 }
-
 #room .more .new {
   background: #9a9;
 }
-
 #room .more .new:hover {
   background: #cdc;
 }
@@ -450,11 +404,9 @@ table {
   overflow: hidden;
   white-space: nowrap;
 }
-
 .ugly-button:hover {
   background: rgba(187, 204, 170, 0.35);
 }
-
 .ugly-button.stuck {
   background: rgba(204, 187, 170, 0.35);
 }
@@ -530,7 +482,6 @@ table {
   line-height: 20px;
   pointer-events: none;
 }
-
 #status .number {
   font-size: 35px;
 }
@@ -582,7 +533,6 @@ table {
   left: 0;
   background: #f80;
 }
-
 #quota .value {
   width: 100%;
   height: 100%;
@@ -613,7 +563,6 @@ table {
   border-radius: 6px;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.25);
 }
-
 .notification-body:after {
   content: "";
   position: absolute;
@@ -643,21 +592,17 @@ table {
   color: #f84;
   text-shadow: none;
 }
-
 .notification .x:hover {
   font-weight: bold;
 }
-
 .notification.classic .notification-body {
   width: 400px;
   background: #fea;
   border-color: #fea;
 }
-
 .notification.short .title {
   display: none;
 }
-
 .notification h1 {
   font-size: 14px;
   font-weight: bold;
@@ -665,7 +610,6 @@ table {
   padding-bottom: 8px;
   text-decoration: underline;
 }
-
 .notification .connection {
   padding: 8px;
   margin: 8px;
@@ -674,33 +618,27 @@ table {
   cursor: pointer;
   font-family: monospace;
 }
-
 .notification .connection.enabled {
   background: #dfd;
 }
-
-.notification .connection:after {
-  content: "OFF";
-  font-size: 10px;
-  color: #a44;
-  float: right;
-}
-
 .notification .connection.enabled:after {
   content: "ON";
   font-size: 10px;
   color: #4a4;
   float: right;
 }
-
+.notification .connection:after {
+  content: "OFF";
+  font-size: 10px;
+  color: #a44;
+  float: right;
+}
 .notification .connection:hover {
   font-weight: bold;
 }
-
 .notification ul {
   list-style-type: upper-roman;
 }
-
 .notification .pack {
   margin: 1px;
   padding: 4px;
@@ -710,27 +648,23 @@ table {
   cursor: pointer;
   font-family: monospace;
 }
-
 .notification .pack.enabled {
   background: #dfd;
   cursor: not-allowed;
   font-weight: bolder;
 }
-
-.notification .pack:after {
-  content: "";
-  font-size: 10px;
-  color: #a44;
-  float: right;
-}
-
 .notification .pack.enabled:after {
   content: "Selected";
   font-size: 10px;
   color: #4a4;
   float: right;
 }
-
+.notification .pack:after {
+  content: "";
+  font-size: 10px;
+  color: #a44;
+  float: right;
+}
 .notification .pack:hover {
   font-weight: bold;
 }
@@ -743,7 +677,6 @@ table {
   top: 0;
   display: none;
 }
-
 #modal .bg {
   width: 100%;
   height: 100%;
@@ -754,7 +687,8 @@ table {
   top: 0;
 }
 
-#modal, #modal * {
+#modal,
+#modal * {
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -780,22 +714,18 @@ table {
   -webkit-box-shadow: 0px 0px 8px #000;
   -moz-box-shadow: 0px 0px 8px #000;
 }
-
 .dialog p {
   margin: 10px;
   font-size: 20px;
 }
-
 .dialog input.text {
   font-size: 20px;
   height: 20px;
   width: 75%;
 }
-
 .dialog input.checkbox {
   margin: 0 5px;
 }
-
 .dialog .submit {
   background: #fe4;
   border: none;
@@ -817,7 +747,6 @@ table {
   bottom: -10px;
   right: -10px;
 }
-
 .dialog .submit:hover {
   background: #ff8;
   transition: all 0.25s;
@@ -834,9 +763,6 @@ table {
 #chat {
   display: none;
   opacity: 1;
-}
-
-#chat {
   position: fixed;
   bottom: 64px;
   left: 0;
@@ -846,39 +772,26 @@ table {
   color: white;
   text-shadow: #888 1px 1px;
 }
-
-#chat, #chat * {
-  user-select: text;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-}
-
 #chat ul {
   list-style: none;
   margin: 4px;
   padding: 0;
   background-attachment: local;
 }
-
 #chat li {
   padding: 2px;
   opacity: 0;
 }
-
 #chat li .name {
   font-weight: bold;
   margin-right: 10px;
 }
-
 #chat li .message {
   margin-right: 6px;
 }
-
 #chat li .quote {
   color: #789922;
 }
-
 #chat input {
   margin: 4px;
   width: 99%;
@@ -890,38 +803,40 @@ table {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
 }
-
 #chat input::-webkit-input-placeholder {
   color: #ccc;
 }
-
 #chat input:-moz-placeholder {
   color: #ccc;
 }
-
 #chat input:focus {
   outline: none;
   border: 1px solid #ff8;
 }
-
 #chat.chatting {
   background: rgba(64, 80, 80, 0.75);
   border-radius: 5px;
   box-shadow: 1px 1px 5px #888;
   transition: all 0.1s;
 }
-
 #chat.chatting li {
   display: list-item !important;
   opacity: 1 !important;
   text-shadow: #aaa 1px 1px;
 }
-
 #chat.chatting ul {
   max-height: 50em;
   overflow-y: scroll;
   overflow-x: hidden;
   word-wrap: break-word;
+}
+
+#chat,
+#chat * {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 
 #social {
@@ -931,7 +846,6 @@ table {
   width: 80px;
   font-size: 12px;
 }
-
 #social #more-button {
   margin-top: 4px;
   width: 77px;
@@ -946,18 +860,15 @@ table {
   background: url("img/kitten1.png") 0px 4px no-repeat;
   background-color: #dee;
 }
-
 #social #more-button:hover {
   color: #899;
   background-color: #e8f8f0;
   transition: background-color 0.25s;
 }
-
 #social .fb-like {
   position: absolute;
   right: 0px;
 }
-
 #social #inclinations {
   margin-top: 50px;
   margin-bottom: 20px;
@@ -979,44 +890,36 @@ table {
   right: 50px;
   text-shadow: none;
 }
-
 #more div {
   margin: 0px;
   padding: 0px;
 }
-
 #more .items {
   margin-left: 1%;
 }
-
 #more .items .item {
   width: 33%;
   float: left;
   background: #cdd;
   transition: background 0.25s;
 }
-
 #more .items .item:hover {
   background: #d0e0e0;
   transition: background 0.25s;
 }
-
 #more .items .item .content {
   height: 200px;
   padding: 10px;
   border-right: 1px solid #bcc;
   border-bottom: 1px solid #bcc;
 }
-
 #more .items .item .content p {
   margin-top: 1em;
   margin-bottom: 1em;
 }
-
 #more .header {
   padding: 5px 10px;
 }
-
 #more .footer {
   clear: both;
   padding: 5px 10px;
@@ -1104,6 +1007,14 @@ table {
   -ms-animation: spin 1s linear infinite;
 }
 
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -1136,3 +1047,5 @@ table {
     -ms-transform: rotate(360deg);
   }
 }
+
+/*# sourceMappingURL=screen.css.map */
