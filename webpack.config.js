@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/ts/script.ts',
+  entry: './src/script.ts',
   mode: 'none',
   module: {
     rules: [
@@ -10,6 +10,7 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      { test: /\.s[ac]ss$/i, use: ['css-loader', 'sass-loader'] },
     ],
   },
   resolve: {
