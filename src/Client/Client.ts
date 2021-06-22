@@ -278,7 +278,7 @@ export class Client extends EventEmitter {
 			id: ""
 		};
 
-		this.autoPickupCrown = true;
+		this.autoPickupCrown = false;
 
 		this.bindEventListeners();
 	}
@@ -387,24 +387,8 @@ export class Client extends EventEmitter {
 			this.channel = msg.ch;
 			if (msg.p) this.participantId = msg.p;
 			this.setParticipants(msg.ppl);
-		});
 
-		this.on("p", msg => {
-			this.participantUpdate(msg);
-			this.emit("participant update", this.findParticipantById(msg.id));
-		});
-
-		this.on("m", msg => {
-			if (this.ppl.hasOwnProperty(msg.id)) {
-				this.participantUpdate(msg);
-			}
-		});
-
-		this.on("bye", msg => {
-			this.removeParticipant(msg.p);
-		});
-
-		this.on("ch", msg => {
+			//auto pickup crown (Added by Hri?)
 			if (this.autoPickupCrown) {
 				if (msg.ch.crown) {
 					var crown = msg.ch.crown;
@@ -424,6 +408,21 @@ export class Client extends EventEmitter {
 					}
 				}
 			}
+		});
+
+		this.on("p", msg => {
+			this.participantUpdate(msg);
+			this.emit("participant update", this.findParticipantById(msg.id));
+		});
+
+		this.on("m", msg => {
+			if (this.ppl.hasOwnProperty(msg.id)) {
+				this.participantUpdate(msg);
+			}
+		});
+
+		this.on("bye", msg => {
+			this.removeParticipant(msg.p);
 		});
 	}
 
