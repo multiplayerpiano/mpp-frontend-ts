@@ -2,10 +2,14 @@
 
 ////////////////////////////////////////////////////////////////
 
-import { Client } from "./Client"
+import { Client, InMessageM } from "./Client"
 import { ClientStatusManager } from "./ClientStatusManager"
 import { ClientParticipantManager } from "./ClientParticipantManager";
 import { ClientCrownManager } from "./ClientCrownManager";
+import { ClientNoteManager } from "./ClientNoteManager";
+import { ClientSettingsManager } from "./ClientSettingsManager";
+import { Notification, NotificationInput } from "../Interface/Notification";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
 
 export class ClientManager {
   channel_id: string;
@@ -14,21 +18,27 @@ export class ClientManager {
   clientStatusManager: ClientStatusManager;
   clientParticipantManager: ClientParticipantManager;
   clientCrownManager: ClientCrownManager;
+  clientNoteManager: ClientNoteManager;
+  clientSettingsManager: ClientSettingsManager;
+  gInterface: MultiplayerPianoClient;
   
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.channel_id = this.getChannelId();
     this.wssport = window.location.hostname === "www.multiplayerpiano.com" ? 443 : 8443;
     this.gClient = new Client((window.location.hostname.includes("localhost") ?  "ws://" : "wss://") + window.location.hostname + ":" + this.wssport);
     this.gClient.setChannel(this.channel_id);
 	  this.gClient.start();
     this.clientStatusManager = new ClientStatusManager(this.gClient);
-    this.clientParticipantManager = new ClientParticipantManager(this.gClient);
+    this.clientParticipantManager = new ClientParticipantManager(this.gInterface, this.gClient);
     this.clientCrownManager = new ClientCrownManager(this.gClient);
+    this.clientNoteManager = new ClientNoteManager(this.gClient, this.gInterface);
+    this.clientSettingsManager = new ClientSettingsManager(this.gClient, this.gInterface);
     this.initClientEvents();
   }
 
   getChannelId(): string {
-    let channel_id = decodeURIComponent(window.location.pathname/*getParameterByName("c")!*/);
+    let channel_id = decodeURIComponent(window.location.pathname);
     if (channel_id.substr(0, 1) === "/") channel_id = channel_id.substr(1);
 	  if (channel_id === "") channel_id = "lobby"; 
     return channel_id;
@@ -50,25 +60,14 @@ export class ClientManager {
    
     
 
-    this.gClient.on("m", this.updateCursor);
-    this.gClient.on("participant added", this.updateCursor);
+    this.gClient.on("m", this.updateCursor.bind(this));
+    this.gClient.on("participant added", this.updateCursor.bind(this));
 
     // Handle notifications
-    gClient.on("notification", function(msg) {
+    this.gClient.on("notification", (msg: NotificationInput) => {
       new Notification(msg);
     });
-
-	
-		
   }
-  /*getParameterByName(name: string, url = window.location.href): string | null {
-		name = name.replace(/[\[\]]/g, "\\$&");
-		let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-			results = regex.exec(url);
-		if (!results) return null;
-		if (!results[2]) return "";
-		return decodeURIComponent(results[2].replace(/\+/g, " "));
-	}*/
 }
 
 

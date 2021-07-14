@@ -2,6 +2,11 @@
 
 ////////////////////////////////////////////////////////////////
 
+import { PianoKey } from "./PianoKey";
+import { Notification } from "../Interface/Notification";
+import { PianoAPI } from "../Renderer/Renderer";
+import * as $ from "jquery";
+
 interface Pack {
   ext: string;
   html: HTMLLIElement;
@@ -16,7 +21,7 @@ interface PackSpec {
   url: string;
 }
 
-class SoundSelector {
+export class SoundSelector {
   initialized: boolean;
   keys: Record<string, PianoKey>;
   loading: Record<string, boolean>;
@@ -40,7 +45,7 @@ class SoundSelector {
     });
   }
   
-  addPack(pack: PackSpec | string, load?: any) {
+  addPack(pack: PackSpec | string, load?: boolean) {
     let self = this;
     self.loading[typeof pack === "string" ? pack : pack.url] = true;
     

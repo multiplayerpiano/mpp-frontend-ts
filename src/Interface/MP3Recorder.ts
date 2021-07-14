@@ -1,11 +1,17 @@
+import { MPP } from "..";
+import { Notification } from "../Interface/Notification";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
 // record mp3
-class MP3Recorder { 
-  constructor() {
+export class MP3Recorder {
+  gInterface: MultiplayerPianoClient; 
+  constructor(gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.init();
   }
   init() {
     let button = document.querySelector("#record-btn")!;
-    let audio = MPP.piano.audio;
+    let audio = this.gInterface.gPiano.audio;
     let context = audio.context;
     let encoder_sample_rate = 44100;
     let encoder_kbps = 128;
@@ -14,7 +20,7 @@ class MP3Recorder {
     let recording = false;
     let recording_start_time = 0;
     let mp3_buffer = [];
-    button.addEventListener("click", function(evt) {
+    button.addEventListener("click", evt => {
       // if (!recording) {
       // 	// start recording
       // 	mp3_buffer = [];
@@ -27,7 +33,7 @@ class MP3Recorder {
       // 	button.textContent = "Stop Recording";
       // 	button.classList.add("stuck");
       // new Notification({"id": "mp3", "title": "Recording MP3...", "html": "It's recording now.  This could make things slow, maybe.  Maybe give it a moment to settle before playing.<br><br>This feature is experimental.<br>Send complaints to <a href=\"mailto:multiplayerpiano.com@gmail.com\">multiplayerpiano.com@gmail.com</a>.", "duration": 10000});
-      new MPPNotification({
+      new Notification({
         "id": "mp3",
         "title": "Recording MP3s is broken.",
         "html": "You can no longer record MP3s.",

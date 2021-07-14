@@ -1,15 +1,20 @@
-import { Client } from "./Client";
+import { MPP } from "..";
+import { Client, Participant } from "./Client";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
 
 export class ClientParticipantManager {
   gClient: Client;
+  gInterface: MultiplayerPianoClient;
 
-  constructor(gClient: Client) {
+  constructor(gInterface: MultiplayerPianoClient, gClient: Client) {
+    this.gInterface = gInterface;
     this.gClient = gClient;
     this.handleParticipants();
   }
   handleParticipants() {
     // Handle changes to participants
-    this.gClient.on("participant added", function(part: Participant) {
+    this.gClient.on("participant added", (part: Participant) => {
 
       part.displayX = 150;
       part.displayY = 50;
@@ -27,10 +32,10 @@ export class ClientParticipantManager {
       if (this.gClient.channel && this.gClient.channel.crown && this.gClient.channel.crown.participantId === part.id) {
         $(div).addClass("owner");
       }
-      if (gPianoMutes.indexOf(part._id!) !== -1) {
+      if (this.gInterface.gPianoMutes.indexOf(part._id!) !== -1) {
         $(part.nameDiv!).addClass("muted-notes");
       }
-      if (gChatMutes.indexOf(part._id!) !== -1) {
+      if (this.gInterface.gChatMutes.indexOf(part._id!) !== -1) {
         $(part.nameDiv!).addClass("muted-chat");
       }
       div.style.display = "none";
@@ -49,7 +54,7 @@ export class ClientParticipantManager {
       $("#names").html(arr);
 
       // add cursorDiv
-      if (this.gClient.participantId !== part.id || gSeeOwnCursor) {
+      if (this.gClient.participantId !== part.id || this.gInterface.gSeeOwnCursor) {
         let div = document.createElement("div");
         div.className = "cursor";
         div.style.display = "none";
@@ -88,7 +93,7 @@ export class ClientParticipantManager {
         .text(name)
         .css("background-color", color);
     });
-    this.gClient.on("ch", function(msg) {
+    this.gClient.on("ch", msg => {
       for (let id in this.gClient.ppl) {
         if (this.gClient.ppl.hasOwnProperty(id)) {
           let part = this.gClient.ppl[id];
@@ -104,12 +109,12 @@ export class ClientParticipantManager {
             $(part.nameDiv!).removeClass("owner");
             $(part.cursorDiv!).removeClass("owner");
           }
-          if (gPianoMutes.indexOf(part._id!) !== -1) {
+          if (this.gInterface.gPianoMutes.indexOf(part._id!) !== -1) {
             $(part.nameDiv!).addClass("muted-notes");
           } else {
             $(part.nameDiv!).removeClass("muted-notes");
           }
-          if (gChatMutes.indexOf(part._id!) !== -1) {
+          if (this.gInterface.gChatMutes.indexOf(part._id!) !== -1) {
             $(part.nameDiv!).addClass("muted-chat");
           } else {
             $(part.nameDiv!).removeClass("muted-chat");

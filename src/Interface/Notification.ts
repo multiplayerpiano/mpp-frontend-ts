@@ -2,7 +2,10 @@
 
 ////////////////////////////////////////////////////////////////
 
-interface MPPNotificationInput {
+import { EventEmitter } from "events";
+import * as $ from "jquery";
+
+export interface NotificationInput {
 	id?: string,
 	title?: string,
 	text?: string,
@@ -12,7 +15,7 @@ interface MPPNotificationInput {
 	class?: string;
 }
 
-class MPPNotification extends EventEmitter {
+export class Notification extends EventEmitter {
   id: string;
   title: string;
   text: string;
@@ -22,7 +25,7 @@ class MPPNotification extends EventEmitter {
   domElement: JQuery<HTMLElement>;
   class: string;
 
-  constructor(par: MPPNotificationInput = {}) {
+  constructor(par: NotificationInput = {}) {
     super();
 
     this.id = "Notification-" + (par.id || Math.random());

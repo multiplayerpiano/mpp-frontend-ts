@@ -2,7 +2,14 @@
 
 ////////////////////////////////////////////////////////////////
 
-class CanvasRenderer extends Renderer {
+import { MPP } from "..";
+import { PianoKey } from "../Pianoctor/PianoKey";
+import { Rect } from "./Rect";
+import { PianoAPI, Renderer } from "./Renderer";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
+export class CanvasRenderer extends Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   blackKeyHeight: number;
@@ -22,10 +29,12 @@ class CanvasRenderer extends Renderer {
   whiteKeyRender: HTMLCanvasElement;
   blackKeyRender: HTMLCanvasElement;
   shadowRender: HTMLCanvasElement[];
+  gInterface: MultiplayerPianoClient;
   //noteLyrics;
 
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {  
     super();
+    this.gInterface = gInterface;
   }
 
   init(piano: PianoAPI) {
@@ -46,7 +55,7 @@ class CanvasRenderer extends Renderer {
     // add event listeners
     let mouse_down: boolean = false;
     let last_key: PianoKey | null = null;
-    $(piano.rootElement).mousedown(function(event) {
+    $(piano.rootElement).mousedown(event => {
       mouse_down = true;
       //event.stopPropagation();
       event.preventDefault();
@@ -54,12 +63,12 @@ class CanvasRenderer extends Renderer {
       let pos = CanvasRenderer.translateMouseEvent(event);
       let hit = self.getHit(pos.x, pos.y);
       if (hit) {
-        press(hit.key.note, hit.v);
+       this.gInterface.keyboard.press(hit.key.note, hit.v);
         last_key = hit.key;
       }
     });
 
-    piano.rootElement.addEventListener("touchstart", function(event) {
+    piano.rootElement.addEventListener("touchstart", event => {
       mouse_down = true;
       //event.stopPropagation();
       event.preventDefault();
@@ -67,20 +76,20 @@ class CanvasRenderer extends Renderer {
         let pos = CanvasRenderer.translateMouseEvent(event.changedTouches[i]);
         let hit = self.getHit(pos.x, pos.y);
         if (hit) {
-          press(hit.key.note, hit.v);
+         this.gInterface.keyboard.press(hit.key.note, hit.v);
           last_key = hit.key;
         }
       }
     }, false);
 
-    $(window).mouseup(function(event) {
+    $(window).mouseup(event => {
       if (last_key) {
-        release(last_key.note);
+       this.gInterface.keyboard.release(last_key.note);
       }
       mouse_down = false;
       last_key = null;
     });
-    /*$(piano.rootElement).mousemove(function(event) {
+    /*$(piano.rootElement).mousemove(event => {
       if (!mouse_down) return;
       let pos = CanvasRenderer.translateMouseEvent(event);
       let hit = self.getHit(pos.x, pos.y);
@@ -324,7 +333,7 @@ class CanvasRenderer extends Renderer {
         if (key.rect.contains(x, y)) {
           let v = y / (key.sharp ? this.blackKeyHeight : this.whiteKeyHeight);
           v += 0.25;
-          v *= DEFAULT_VELOCITY;
+          v *= this.gInterface.DEFAULT_VELOCITY;
           if (v > 1.0) v = 1.0;
           return {
             key: key,

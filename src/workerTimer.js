@@ -1,4 +1,4 @@
-self.onmessage = function(event)
+self.onmessage = event =>
 	{
 		setTimeout(function(){
 			postMessage({args:event.data.args});

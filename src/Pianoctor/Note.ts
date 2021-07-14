@@ -2,7 +2,7 @@
 
 ////////////////////////////////////////////////////////////////
 
-class Note {
+export class Note {
   note: string;
   octave: number;
   

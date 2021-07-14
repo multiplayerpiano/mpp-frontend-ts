@@ -268,3 +268,6 @@ ebsprite.stop = function() {
 		this.client.off("participant removed", this.participantRemoved);
 	}
 }
+
+//temporary solution so the code builds.
+window.ebsprite = ebsprite;

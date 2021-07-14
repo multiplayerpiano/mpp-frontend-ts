@@ -2,7 +2,13 @@
 
 ////////////////////////////////////////////////////////////////
 
-class AudioEngineWeb extends AudioEngine {
+import { AudioEngine, PlayingNode } from "./AudioEngine";
+import { Notification } from "../Interface/Notification"
+import { SynthVoice } from "../Synth/SynthVoice";
+import { Synth } from "../Synth/Synth";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
+export class AudioEngineWeb extends AudioEngine {
   threshold: number;
   worker: Worker;
   context: AudioContext;
@@ -11,13 +17,18 @@ class AudioEngineWeb extends AudioEngine {
   pianoGain: GainNode;
   synthGain: GainNode;
   playings: Record<string, PlayingNode>;
+  synth: Synth;
+  gInterface: MultiplayerPianoClient;
   
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {
     super();
+    this.synth = gInterface.synth;
+    this.gInterface = gInterface;
     this.threshold = 1000;
-    //this.worker = new Worker("/js/workerTimer.js");
-    //let self = this;
-    /*this.worker.onmessage = function(event) {
+    //worker is unneeded 
+    /*this.worker = new Worker("/js/workerTimer.js");
+    let self = this;
+    this.worker.onmessage = event => {
       if (event.data.args)
         if (event.data.args.action === 0) {
           self.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id);
@@ -114,7 +125,7 @@ class AudioEngineWeb extends AudioEngine {
       playing.gain.gain.setValueAtTime(playing.gain.gain.value, time);
       playing.gain.gain.linearRampToValueAtTime(0.0, time + 0.2);
       playing.source.stop(time + 0.21);
-      if (enableSynth && playing.voice) {
+      if (this.synth?.enableSynth && playing.voice) {
         playing.voice.stop(time);
       }
     }
@@ -123,9 +134,8 @@ class AudioEngineWeb extends AudioEngine {
       "gain": gain,
       "part_id": part_id
     };
-    
-    if (enableSynth) {
-      this.playings[id].voice = new synthVoice(id, time);
+    if (this.synth?.enableSynth) {
+      this.playings[id].voice = new SynthVoice(this.gInterface, id, time);
     }
   }
   play(id: string, vol: number, delay_ms: number, part_id: string) {
