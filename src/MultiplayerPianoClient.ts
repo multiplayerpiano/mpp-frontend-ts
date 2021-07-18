@@ -21,7 +21,7 @@ import { Settings } from './Misc/Settings';
 import { KeyboardHandler } from './Pianoctor/KeyboardHandler';
 import { Cursor } from './Misc/Cursor';
 import { SoundSelector } from './Pianoctor/SoundSelector';
-import { PianoAPI, Renderer } from './Renderer/Renderer';
+import { CanvasRenderer } from './Renderer/CanvasRenderer';
 
 export class MultiplayerPianoClient {
 	test_mode: "" | RegExpMatchArray | null;
@@ -55,8 +55,7 @@ export class MultiplayerPianoClient {
 	controlBarEvents: ControlBarEvents;
 	settings: Settings;
 	cursor: Cursor;
-	renderer: Renderer;
-	pianoAPI: PianoAPI
+	renderer: CanvasRenderer;
 
 	constructor() {
 		this.test_mode = window.location.hash && window.location.hash.match(/^(?:#.+)*#test(?:#.+)*$/i);
@@ -82,15 +81,8 @@ export class MultiplayerPianoClient {
 		this.gMidiOutTest = this.midi.midi_handler?.gMidiOutTest;
 		this.synth = new Synth(this);	
 		this.gPiano.audio.synth = this.synth; //bad solution
-		this.pianoAPI = {
-			audio: this.gPiano.audio,
-			keys: this.gPiano.keys,
-			renderer: this.renderer,
-			rootElement: this.gPiano.rootElement
-		}
-		this.gSoundSelector = new SoundSelector(this.pianoAPI);
-		this.renderer = new Renderer();
-		this.renderer.init(this.pianoAPI);
+		this.renderer = this.gPiano.renderer;
+		this.gSoundSelector = new SoundSelector(this.gPiano);
 		this.ebspriteManager = new EbspriteManager(this);
 		this.gPianoMutes = (localStorage.pianoMutes ? localStorage.pianoMutes as string : "").split(',').filter(v => v);
 		this.gChatMutes = (localStorage.pianoMutes ? localStorage.pianoMutes as string : "").split(',').filter(v => v);

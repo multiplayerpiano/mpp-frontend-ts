@@ -6,6 +6,7 @@ import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
 export class KeyboardHandler {
   key_binding: Record<number, {note: Note, held: boolean}>;
   capsLockKey: boolean;
+  capKeyboard: boolean;
   transpose_octave: number;
   gInterface: MultiplayerPianoClient;
   recapListenerFunc: (evt: JQuery.MouseDownEvent | JQuery.TouchStartEvent) => void;
@@ -17,12 +18,17 @@ export class KeyboardHandler {
     this.gInterface = gInterface;
     this.key_binding = this.getKeyBinding();
     this.capsLockKey = false;
+    this.capKeyboard = true;
     this.transpose_octave = 0;
     this.recapListenerFunc = this.recapListener.bind(this);
     this.recapListenerFunc2 = this.recapListener.bind(this);
     this.handleKeyDownFunc = this.handleKeyDown.bind(this);
     this.handleKeyUpFunc = this.handleKeyUp.bind(this);
-
+    $(document).on("keydown", this.handleKeyDownFunc); 
+    $(document).on("keyup", this.handleKeyUpFunc);
+    $(window).on("keypress", this.handleKeyPress);
+    $("#piano").on("mousedown", this.recapListenerFunc);
+    $("#piano").on("touchstart", this.recapListenerFunc2);
   }
 
   n(a: string, b?: number): {note: Note, held: boolean} {
@@ -80,6 +86,7 @@ export class KeyboardHandler {
   }
 
   handleKeyDown(evt: JQuery.KeyDownEvent) {
+	if (!this.capKeyboard) return;
     //console.log(evt);
     let code = parseInt(evt.keyCode as any); //! Deprecated - Hri7566
     if (this.key_binding[code] !== undefined) {
@@ -125,6 +132,7 @@ export class KeyboardHandler {
   }
 
   handleKeyUp(evt: JQuery.KeyUpEvent) {
+	if (!this.capKeyboard) return;
     let code = parseInt(evt.keyCode as any); //! Also deprecated - Hri7566
     if (this.key_binding[code] !== undefined) {
       let binding = this.key_binding[code];
@@ -152,6 +160,7 @@ export class KeyboardHandler {
   }
 
   handleKeyPress(evt: JQuery.KeyPressEvent) {
+	if (!this.capKeyboard) return;
     evt.preventDefault();
     evt.stopPropagation();
     if (evt.keyCode === 27 || evt.keyCode === 13) {
@@ -165,19 +174,21 @@ export class KeyboardHandler {
   }
 
   captureKeyboard() {
-    $("#piano").off("mousedown", this.recapListenerFunc);
+	this.capKeyboard = true;
+    /*$("#piano").off("mousedown", this.recapListenerFunc); //old, inefficient way of handling things
     $("#piano").off("touchstart", this.recapListenerFunc2);
     $(document).on("keydown", this.handleKeyDownFunc); 
     $(document).on("keyup", this.handleKeyUpFunc);
-    $(window).on("keypress", this.handleKeyPress);
+    $(window).on("keypress", this.handleKeyPress);*/
   };
 
   releaseKeyboard() {
-    $(document).off("keydown", this.handleKeyDownFunc);
+    this.capKeyboard = false;
+    /*$(document).off("keydown", this.handleKeyDownFunc);
     $(document).off("keyup", this.handleKeyUpFunc);
     $(window).off("keypress", this.handleKeyPress);
     $("#piano").on("mousedown", this.recapListenerFunc);
-    $("#piano").on("touchstart", this.recapListenerFunc2);
+    $("#piano").on("touchstart", this.recapListenerFunc2);*/
   };
 
   velocityFromMouseY(): number {

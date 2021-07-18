@@ -44,7 +44,7 @@ export class Color {
 
 	toHexa(): string {
 		// TODO: Can probably be done in a nicer way
-		let r = this.r.toString(16), g = this.g.toString(16), b = this.b.toString(16);
+		let r = Math.trunc(this.r).toString(16), g = Math.trunc(this.g).toString(16), b = Math.trunc(this.b).toString(16);
 		if (r.length === 1) r = "0" + r;
 		if (g.length === 1) g = "0" + g;
 		if (b.length === 1) b = "0" + b;

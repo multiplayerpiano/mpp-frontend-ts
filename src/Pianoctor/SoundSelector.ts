@@ -4,7 +4,7 @@
 
 import { PianoKey } from "./PianoKey";
 import { Notification } from "../Interface/Notification";
-import { PianoAPI } from "../Renderer/Renderer";
+import { Piano } from "./Piano";
 import * as $ from "jquery";
 
 interface Pack {
@@ -27,10 +27,10 @@ export class SoundSelector {
   loading: Record<string, boolean>;
   notification: Notification;
   packs: Pack[];
-  piano: PianoAPI;
+  piano: Piano;
   soundSelection: string;
 
-  constructor(piano: PianoAPI) {
+  constructor(piano: Piano) {
     this.initialized = false;
     this.keys = piano.keys;
     this.loading = {};
@@ -47,10 +47,11 @@ export class SoundSelector {
   
   addPack(pack: PackSpec | string, load?: boolean) {
     let self = this;
-    self.loading[typeof pack === "string" ? pack : pack.url] = true;
     
     function add(obj: Pack) {
       let added = false;
+      if (obj.url.substr(obj.url.length - 1) != "/") obj.url += "/";
+      self.loading[obj.url] = true;
       for (let i = 0; self.packs.length > i; i++) {
         if (obj.name === self.packs[i].name) {
           added = true;
@@ -58,9 +59,8 @@ export class SoundSelector {
         }
       }
 
-      if (added) return console.warn("Sounds already added!!"); //no adding soundpacks twice D:<
+      if (added) return console.warn("Soundpack already added!!"); //no adding soundpacks twice D:<
 
-      if (obj.url.substr(obj.url.length - 1) !== "/") obj.url += "/";
       let html = document.createElement("li");
       html.className = "pack"; //* Changed to add - Hri7566
       html.innerText = obj.name + " (" + obj.keys.length + " keys)";
@@ -84,7 +84,7 @@ export class SoundSelector {
         json.url = pack;
         add(json);
       });
-    } else add(pack as Pack); //validate packs??
+    } else add(pack as Pack);
   }
 
   addPacks(packs: (PackSpec | string)[]) {
@@ -134,7 +134,9 @@ export class SoundSelector {
     if (pack.name === this.soundSelection && !f) return;
     if (pack.keys.length !== Object.keys(this.piano.keys).length) {
       this.piano.keys = {};
-      for (let i = 0; pack.keys.length > i; i++) this.piano.keys[pack.keys[i]] = this.keys[pack.keys[i]];
+      for (let i = 0; pack.keys.length > i; i++) {
+        this.piano.keys[pack.keys[i]] = this.keys[pack.keys[i]];
+      }
       this.piano.renderer.resize();
     }
 
@@ -144,6 +146,7 @@ export class SoundSelector {
       (function () {
         let key = self.piano.keys[k];
         key.loaded = false;
+        delete self.piano.audio.sounds[k];
         self.piano.audio.load(key.note, pack.url + key.note + pack.ext, function() {
           key.loaded = true;
           key.timeLoaded = Date.now();
