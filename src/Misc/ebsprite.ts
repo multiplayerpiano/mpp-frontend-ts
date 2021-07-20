@@ -1,7 +1,7 @@
 import { Client } from "../Client/Client";
 import * as spriteData from "./ebsprite-data.json";
 
-function downloadImage(url: string, cb: { (err: boolean, img: any): void; (arg0: string | boolean, arg1: HTMLImageElement): void; }) {
+function downloadImage(url: string, cb: any) {
 	var img = new Image();
 	img.onerror = function() {
 		cb("onerror", img);
@@ -15,13 +15,14 @@ function downloadImage(url: string, cb: { (err: boolean, img: any): void; (arg0:
 	img.src = url;
 };
 
-function downloadImages(urls: string[], cb: { (arg0: string | boolean, arg1: any[]): void; (): void; }) {
-	var imgs = new Array(urls.length);
+async function downloadImages(urls: string[], cb: any) {
+/*	var imgs = new Array(urls.length);
 	var c = 0;
 	for(var i in urls) {
 		(function() {
 			var j = i;
 			downloadImage(urls[i], function(err: boolean, img: HTMLImageElement) {
+				console.log(img, err, i);
 				if(err) {
 					cb(err, imgs);
 					cb = function() {};
@@ -33,7 +34,12 @@ function downloadImages(urls: string[], cb: { (arg0: string | boolean, arg1: any
 				}
 			});
 		})();
+	}*/
+	let promises = [];
+	for (let url of urls) {
+		promises.push(fetch(url));
 	}
+	return (await Promise.all(promises)).map(async (a) => await a.blob());
 };
 
 export class Ebsprite {
@@ -195,16 +201,43 @@ class Camera {
 }
 
 class SpriteProvider {
-	sprites: string[];
 	player: Player;
+	spritesList: string[];
+	sprites: {[key: string]: any}
 	constructor(player: Player, sprites: string[], cb: { (): void; (): void; } | undefined) {
-		this.sprites = sprites;
+		this.spritesList = sprites;
+		this.sprites = {};
 		this.player = player;
 		var urls = new Array(sprites.length);
 		for(var i in sprites) {
 			urls[i] = "/img/ebsprite/" + sprites[i] + ".png";
 		}
-		downloadImages(urls, (function(err: any, imgs: any) {
+		let self = this;
+		downloadImages(urls, (() => {})).then((imgs) => {
+			let images: HTMLImageElement[] = [];
+			let promise = new Promise ((resolve, reject) => {
+				imgs.forEach(async (img, index, array) => {
+					let image = new Image();
+					let objectURL = URL.createObjectURL(await img);
+					image.src = objectURL;
+					images.push(image);
+					if (index === array.length -1) resolve(1);
+				})
+			});
+			promise.then(() => {
+				var s = images;
+				self.sprites = {};
+				self.sprites["up"] = [s[0], s[1]];
+				self.sprites["right"] = [s[2], s[3]];
+				self.sprites["down"] = [s[4], s[5]];
+				self.sprites["left"] = [s[6], s[7]];
+				self.sprites["up-right"] = [s[8] || s[2], s[9] || s[3]];
+				self.sprites["right-down"] = [s[10] || s[2], s[11] || s[3]];
+				self.sprites["down-left"] = [s[12] || s[6], s[13] || s[7]];
+				self.sprites["left-up"] = [s[14] || s[6], s[15] || s[7]];
+			});
+		});
+		/*downloadImages(urls, (function(err: any, imgs: any) {
 			if(!err) {
 				var s = imgs;
 				this.sprites = {};
@@ -218,7 +251,7 @@ class SpriteProvider {
 				this.sprites["left-up"] = [s[14] || s[6], s[15] || s[7]];
 			}
 			if(cb) cb();
-		}).bind(this));
+		}).bind(this));*/
 	}
 
 	getCurrentSprite(player: Player) {
@@ -252,7 +285,6 @@ class Player {
 		
 		//this.sprites = spriteData[0].sprites;
 		this.sprites = this.ebsprite.spriteData[parseInt(id, 16) % this.ebsprite.spriteData.length].sprites;
-		console.log(this.sprites);
 		this.spriteProvider = new SpriteProvider(this, this.sprites, (() => {}));
 		this.canMoveDiagonally = (this.sprites[8] && this.sprites[9] && this.sprites[10] && this.sprites[11] && this.sprites[12] && this.sprites[13] && this.sprites[14] && this.sprites[15]) ? true : false;
 		this.walkSpeed = 0.15;
