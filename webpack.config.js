@@ -10,7 +10,13 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
-      { test: /sass\/\.s[ac]ss$/i, use: ['css-loader', 'sass-loader'] },
+      {
+        test: /sass\/\.s[ac]ss$/i,
+        use: [
+          'css-loader',
+          'sass-loader'
+        ]
+      },
     ],
   },
   resolve: {
