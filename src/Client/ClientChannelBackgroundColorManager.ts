@@ -1,4 +1,4 @@
-import { Color } from "../Color";
+import { Color } from "../Misc/Color";
 import { Client } from "./Client";
 
 export class ClientChannelBackgroundColorManager {
@@ -36,9 +36,10 @@ export class ClientChannelBackgroundColorManager {
     difference.g -= this.old_color2.g;
     difference.b -= this.old_color2.b;
     let inc2 = new Color(difference.r / steps, difference.g / steps, difference.b / steps);
-    let iv = setInterval(function () {
+    let iv = setInterval(() => {
       this.old_color1.add(inc1.r, inc1.g, inc1.b);
       this.old_color2.add(inc2.r, inc2.g, inc2.b);
+      //TODO: SOMETHING IS BROKEN HERE AND I DONT KNOW WHAT
       document.body.style.background = "radial-gradient(ellipse at center, " + this.old_color1.toHexa() + " 0%," + this.old_color2.toHexa() + " 100%)";
       bottom.style.background = this.old_color2.toHexa();
       if (++step >= steps) {
@@ -59,7 +60,7 @@ export class ClientChannelBackgroundColorManager {
     // Background color
     this.setColorToDefault();
 
-    this.gClient.on("ch", function (ch) {
+    this.gClient.on("ch", ch => {
       if (ch.ch.settings) {
         if (ch.ch.settings.color) {
           this.setColor(ch.ch.settings.color, ch.ch.settings.color2!);

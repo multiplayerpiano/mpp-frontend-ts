@@ -2,7 +2,9 @@
 
 ////////////////////////////////////////////////////////////////
 
-class AudioEngine {
+import { SynthVoice } from "../Synth/SynthVoice";
+
+export class AudioEngine {
   volume: number;
   sounds: Record<string, AudioBuffer>;
   paused: boolean;
@@ -23,9 +25,9 @@ class AudioEngine {
     this.paused = false;
   }
 }
-interface PlayingNode {
+export interface PlayingNode {
   source: AudioBufferSourceNode;
   gain: GainNode;
   part_id: string;
-  voice?: synthVoice;
+  voice?: SynthVoice;
 }

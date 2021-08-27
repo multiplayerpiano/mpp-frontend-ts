@@ -8,7 +8,8 @@
             "es7",
             "dom"
         ],
-        "target": "es3"
+        "target": "es3",
+        "resolveJsonModule": true
     },
     "include": [
         "src/**/*"

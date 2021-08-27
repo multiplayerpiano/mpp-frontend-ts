@@ -1,19 +1,23 @@
-import { Color } from "../Color";
+import { MPP } from "..";
 import { Client } from "./Client";
 import { ClientChannelBackgroundColorManager } from "./ClientChannelBackgroundColorManager";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
 
 export class ClientSettingsManager {
   gClient: Client;
   clientChannelBackgroundColorManager: ClientChannelBackgroundColorManager;
+  gInterface: MultiplayerPianoClient;
 
-  constructor(gClient: Client) {
+  constructor(gClient: Client, gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.gClient = gClient;
     this.clientChannelBackgroundColorManager = new ClientChannelBackgroundColorManager(this.gClient);
     this.handleSettings();
   }
   handleSettings() {
     // Room settings button
-    this.gClient.on("ch", function(msg) {
+    this.gClient.on("ch", msg => {
       if (this.gClient.isOwner()) {
         $("#room-settings-btn").show();
       } else {
@@ -23,7 +27,7 @@ export class ClientSettingsManager {
     $("#room-settings-btn").click(evt => {
       if (this.gClient.channel && this.gClient.isOwner()) {
         let settings = this.gClient.channel.settings;
-        openModal("#room-settings");
+        this.gInterface.modal.openModal("#room-settings");
         setTimeout(function() {
           $("#room-settings .checkbox[name=visible]").prop("checked", settings.visible);
           $("#room-settings .checkbox[name=chat]").prop("checked", settings.chat);
@@ -40,10 +44,10 @@ export class ClientSettingsManager {
         color: $("#room-settings input[name=color]").val() as string
       };
       this.gClient.setChannelSettings(settings);
-      closeModal();
+      this.gInterface.modal.closeModal();
     });
     $("#room-settings .drop-crown").click(() => {
-      closeModal();
+      this.gInterface.modal.closeModal();
       if (confirm("This will drop the crown...!"))
         this.gClient.sendArray([{
           m: "chown"

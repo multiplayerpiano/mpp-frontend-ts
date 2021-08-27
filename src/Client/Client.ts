@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import { NotificationInput } from "../Interface/Notification";
+
 export interface Participant {
 	x?: number;
 	y?: number;
@@ -34,16 +36,6 @@ export interface ChannelSettings {
 	'no cussing'?: boolean;
 }
 
-interface NotificationInput {
-	id?: string,
-	title?: string,
-	text?: string,
-	html?: string | HTMLElement,
-	target?: string,
-	duration?: number
-	class?: string;
-}
-
 interface Note {
 	d?: number;
 	s?: number;
@@ -56,18 +48,18 @@ export interface ChatMessage {
 	p: Participant;
 }
 
-interface InMessageHi {
+export interface InMessageHi {
 	m: "hi";
 	motd?: string;
 	t: number;
 	u?: Participant;
 }
-interface InMessageT {
+export interface InMessageT {
 	m: "t";
 	t: number;
 	e?: number;
 }
-interface InMessageCh {
+export interface InMessageCh {
 	m: "ch";
 	p: string;
 	ppl: {
@@ -78,7 +70,7 @@ interface InMessageCh {
 	}[];
 	ch: Channel;
 }
-interface InMessageP {
+export interface InMessageP {
 	m: "p";
 	id: string;
 	_id: string;
@@ -97,26 +89,26 @@ interface InMessageBye {
 	m: "bye";
 	p: string;
 }
-interface InMessageN {
+export interface InMessageN {
 	m: "n";
 	t: number;
 	p: string;
 	n: Note[];
 }
-interface InMessageNq {
+export interface InMessageNq {
 	m: "nq";
 	allowance: number;
 	max: number;
 }
-interface InMessageLs {
+export interface InMessageLs {
 	m: "ls";
 	u: (Channel & {banned: boolean})[];
 }
-interface InMessageC {
+export interface InMessageC {
 	m: "c";
 	c: ChatMessage[];
 }
-interface InMessageA extends ChatMessage {
+export interface InMessageA extends ChatMessage {
 	m: "a";
 }
 
@@ -247,7 +239,6 @@ export class Client extends EventEmitter {
 	noteBufferTime: number;
 	noteFlushInterval?: number;
 	['🐈']: number;
-	autoPickupCrown: boolean;
 	offlineChannelSettings: ChannelSettings = {color:"#ecfaed"};
 	offlineParticipant: Participant = {_id: "", name: "", color: "#777"};
 
@@ -278,7 +269,6 @@ export class Client extends EventEmitter {
 			id: ""
 		};
 
-		this.autoPickupCrown = false;
 
 		this.bindEventListeners();
 	}
@@ -387,27 +377,6 @@ export class Client extends EventEmitter {
 			this.channel = msg.ch;
 			if (msg.p) this.participantId = msg.p;
 			this.setParticipants(msg.ppl);
-
-			//auto pickup crown (Added by Hri?)
-			if (this.autoPickupCrown) {
-				if (msg.ch.crown) {
-					var crown = msg.ch.crown;
-					if (!crown.participantId || !this.ppl[crown.participantId]) {
-						let land_time = crown.time + 2000 - this.serverTimeOffset;
-						let avail_time = crown.time + 15000 - this.serverTimeOffset;
-						let countdown_interval = setInterval(function() {
-							let time = Date.now();
-							if (time >= land_time) {
-								let ms = avail_time - time;
-								if (ms <= 0) {
-									clearInterval(countdown_interval);
-									this.pickupCrown();
-								}
-							}
-						}, 1000);
-					}
-				}
-			}
 		});
 
 		this.on("p", msg => {
@@ -527,7 +496,7 @@ export class Client extends EventEmitter {
 		return this.isConnected() && !this.isOwner() && this.getChannelSetting("crownsolo") === true;
 	}
 
-	receiveServerTime(time: number, echo: any) {
+	receiveServerTime(time: number, echo: number | undefined) {
 		let now = Date.now();
 		let target = time - now;
 		//console.log("Target serverTimeOffset: " + target);
@@ -576,7 +545,9 @@ export class Client extends EventEmitter {
 	};
 	
 	// Where do these methods come from???
+	// keeping extra methods for now, might change later.
 
+	/// START EXTRA METHODS BY HRI ///
 	setName(str: string) {
 		if (str.length > 40) return;
 		this.sendArray([{m:'userset', set:{name:str}}]);
@@ -609,4 +580,5 @@ export class Client extends EventEmitter {
 			return ret;
 		}
 	}
+	/// END EXTRA METHODS BY HRI ///
 }

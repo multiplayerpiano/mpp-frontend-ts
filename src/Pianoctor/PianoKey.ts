@@ -2,7 +2,10 @@
 
 ////////////////////////////////////////////////////////////////
 
-class PianoKey {
+import { Rect } from "../Renderer/Rect";
+import { Blip } from "../Renderer/Renderer";
+
+export class PianoKey {
   note: string;
   baseNote: string;
   octave: number;

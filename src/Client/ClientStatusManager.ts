@@ -1,4 +1,5 @@
 import { Client } from "./Client";
+import * as $ from "jquery";
 
 export class ClientStatusManager {
   gClient: Client;

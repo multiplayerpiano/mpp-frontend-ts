@@ -1,4 +1,5 @@
 import { Client } from "./Client";
+import * as $ from "jquery";
 
 export class ClientCrownManager {
   gClient: Client;
@@ -47,7 +48,7 @@ export class ClientCrownManager {
 						});
 					}
 					clearInterval(this.countdown_interval);
-					this.countdown_interval = window.setInterval(function () {
+					this.countdown_interval = window.setInterval(() => {
 						let time = Date.now();
 						if (time >= land_time) {
 							let ms = avail_time - time;
@@ -66,8 +67,8 @@ export class ClientCrownManager {
 				this.jqcrown.hide();
 			}
 		});
-		this.gClient.on("disconnect", function () {
+		this.gClient.on("disconnect", (() => {
 			this.jqcrown.fadeOut(2000);
-		});
+		}));
   }
 }

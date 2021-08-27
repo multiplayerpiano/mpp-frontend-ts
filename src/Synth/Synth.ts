@@ -1,5 +1,11 @@
+import { MPP } from "..";
+import { AudioEngineWeb } from "../AudioEngine/AudioEngineWeb";
+import { Knob, mixin } from "../Misc/util";
+import { Notification } from "../Interface/Notification";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
 // synth
-class Synth {
+export class Synth {
   enableSynth: boolean;
   audio: AudioEngineWeb;
   context: AudioContext;
@@ -13,11 +19,13 @@ class Synth {
   osc1_release: number;
   button: HTMLElement;
   notification: Notification | null;
+  gInterface: MultiplayerPianoClient;
 
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.enableSynth = false;
-    this.audio = gPiano.audio;
-    this.context = gPiano.audio.context;
+    this.audio = this.gInterface.gPiano.audio;
+    this.context = this.gInterface.gPiano.audio.context;
     this.synth_gain = this.context.createGain();
     this.synth_gain.gain.value = 0.05;
     this.synth_gain.connect(this.audio.synthGain);
@@ -40,7 +48,7 @@ class Synth {
 			if (this.notification) {
 				this.notification.close();
 			} else {
-				showSynth();
+				this.showSynth();
 			}
 		}));
   }
@@ -49,30 +57,28 @@ class Synth {
     let html = document.createElement("div");
 
     // on/off button
-    (function() {
-      let button = document.createElement("input");
-      mixin(button, {
-        type: "button",
-        value: "ON/OFF",
-        className: enableSynth ? "switched-on" : "switched-off"
-      });
-      button.addEventListener("click", function(evt) {
-        enableSynth = !enableSynth;
-        button.className = enableSynth ? "switched-on" : "switched-off";
-        if (!enableSynth) {
-          // stop all
-          for (let i in audio.playings) {
-            if (!audio.playings.hasOwnProperty(i)) continue;
-            let playing = audio.playings[i];
-            if (playing && playing.voice) {
-              playing.voice.osc.stop();
-              playing.voice = undefined;
-            }
+    let button = document.createElement("input");
+    mixin(button, {
+      type: "button",
+      value: "ON/OFF",
+      className: this.enableSynth ? "switched-on" : "switched-off"
+    });
+    button.addEventListener("click", evt => {
+      this.enableSynth = !this.enableSynth;
+      button.className = this.enableSynth ? "switched-on" : "switched-off";
+      if (!this.enableSynth) {
+        // stop all
+        for (let i in this.gInterface.gPiano.audio.playings) {
+          if (!this.gInterface.gPiano.audio.playings.hasOwnProperty(i)) continue;
+          let playing =this.gInterface.gPiano.audio.playings[i];
+          if (playing && playing.voice) {
+            playing.voice.osc.stop();
+            playing.voice = undefined;
           }
         }
-      });
-      html.appendChild(button);
-    })();
+      }
+    });
+    html.appendChild(button);
     
     let knobCanvas: HTMLCanvasElement;
     let knob: Knob;
@@ -88,28 +94,26 @@ class Synth {
     knob = new Knob(knobCanvas, 0, 100, 0.1, 50, "mix", "%");
     knob.canvas.style.width = "32px";
     knob.canvas.style.height = "32px";
-    knob.on("change", function(k: Knob) {
+    knob.on("change", (k: Knob) => {
       var mix = k.value / 100;
-      audio.pianoGain.gain.value = 1 - mix;
-      audio.synthGain.gain.value = mix;
+     this.gInterface.gPiano.audio.pianoGain.gain.value = 1 - mix;
+     this.gInterface.gPiano.audio.synthGain.gain.value = mix;
     });
     knob.emit("change", knob);
 
     // osc1 type
-    (function() {
-      osc1_type = osc_types[osc_type_index];
-      let button = document.createElement("input");
-      mixin(button, {
-        type: "button",
-        value: osc_types[osc_type_index]
-      });
-      button.addEventListener("click", function(evt) {
-        if (++osc_type_index >= osc_types.length) osc_type_index = 0;
-        osc1_type = osc_types[osc_type_index];
-        button.value = osc1_type;
-      });
-      html.appendChild(button);
-    })();
+    this.osc1_type = this.osc_types[this.osc_type_index];
+    let button2 = document.createElement("input");
+    mixin(button2, {
+      type: "button",
+      value: this.osc_types[this.osc_type_index]
+    });
+    button2.addEventListener("click", evt => {
+      if (++this.osc_type_index >= this.osc_types.length) this.osc_type_index = 0;
+      this.osc1_type = this.osc_types[this.osc_type_index];
+      button2.value = this.osc1_type;
+    });
+    html.appendChild(button2);
 
     // osc1 attack
     knobCanvas = document.createElement("canvas");
@@ -119,11 +123,11 @@ class Synth {
       className: "knob"
     });
     html.appendChild(knobCanvas);
-    knob = new Knob(knobCanvas, 0, 1, 0.001, osc1_attack, "osc1 attack", "s");
+    knob = new Knob(knobCanvas, 0, 1, 0.001, this.osc1_attack, "osc1 attack", "s");
     knob.canvas.style.width = "32px";
     knob.canvas.style.height = "32px";
-    knob.on("change", function(k: Knob) {
-      osc1_attack = k.value;
+    knob.on("change", (k: Knob) => {
+      this.osc1_attack = k.value;
     });
     knob.emit("change", knob);
 
@@ -135,11 +139,11 @@ class Synth {
       className: "knob"
     });
     html.appendChild(knobCanvas);
-    knob = new Knob(knobCanvas, 0, 2, 0.001, osc1_decay, "osc1 decay", "s");
+    knob = new Knob(knobCanvas, 0, 2, 0.001, this.osc1_decay, "osc1 decay", "s");
     knob.canvas.style.width = "32px";
     knob.canvas.style.height = "32px";
-    knob.on("change", function(k: Knob) {
-      osc1_decay = k.value;
+    knob.on("change", (k: Knob) => {
+      this.osc1_decay = k.value;
     });
     knob.emit("change", knob);
 
@@ -150,11 +154,11 @@ class Synth {
       className: "knob"
     });
     html.appendChild(knobCanvas);
-    knob = new Knob(knobCanvas, 0, 1, 0.001, osc1_sustain, "osc1 sustain", "x");
+    knob = new Knob(knobCanvas, 0, 1, 0.001, this.osc1_sustain, "osc1 sustain", "x");
     knob.canvas.style.width = "32px";
     knob.canvas.style.height = "32px";
-    knob.on("change", function(k: Knob) {
-      osc1_sustain = k.value;
+    knob.on("change", (k: Knob) => {
+      this.osc1_sustain = k.value;
     });
     knob.emit("change", knob);
 
@@ -166,11 +170,11 @@ class Synth {
       className: "knob"
     });
     html.appendChild(knobCanvas);
-    knob = new Knob(knobCanvas, 0, 2, 0.001, osc1_release, "osc1 release", "s");
+    knob = new Knob(knobCanvas, 0, 2, 0.001, this.osc1_release, "osc1 release", "s");
     knob.canvas.style.width = "32px";
     knob.canvas.style.height = "32px";
-    knob.on("change", function(k: Knob) {
-      osc1_release = k.value;
+    knob.on("change", (k: Knob) => {
+      this.osc1_release = k.value;
     });
     knob.emit("change", knob);
 
@@ -183,7 +187,7 @@ class Synth {
 
 
     // notification
-    notification = new Notification({
+    let notification = new Notification({
       title: "Synthesize",
       html: html,
       duration: -1,
@@ -192,7 +196,7 @@ class Synth {
     notification.on("close", function() {
       let tip = document.getElementById("tooltip")!;
       if (tip) tip.parentNode!.removeChild(tip);
-      notification = null;
+      //notification = null;
     });
   }
 

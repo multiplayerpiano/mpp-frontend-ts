@@ -2,7 +2,9 @@
 
 ////////////////////////////////////////////////////////////////
 
-class Translation {
+import * as $ from "jquery";
+
+export class Translation {
   language: string;
   strings: Record<string, Record<string, string>> = {
     "people are playing": {

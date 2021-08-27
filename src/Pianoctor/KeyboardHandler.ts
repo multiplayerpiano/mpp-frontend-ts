@@ -1,12 +1,34 @@
-class KeyboardHandler {
+import { MPP } from "..";
+import { Note } from "./Note";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
+export class KeyboardHandler {
   key_binding: Record<number, {note: Note, held: boolean}>;
   capsLockKey: boolean;
+  capKeyboard: boolean;
   transpose_octave: number;
+  gInterface: MultiplayerPianoClient;
+  recapListenerFunc: (evt: JQuery.MouseDownEvent | JQuery.TouchStartEvent) => void;
+  recapListenerFunc2: (evt: JQuery.MouseDownEvent | JQuery.TouchStartEvent) => void;
+  handleKeyDownFunc: (evt: JQuery.KeyDownEvent) => void;
+  handleKeyUpFunc: (evt: JQuery.KeyUpEvent) => void;
 
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.key_binding = this.getKeyBinding();
     this.capsLockKey = false;
+    this.capKeyboard = true;
     this.transpose_octave = 0;
+    this.recapListenerFunc = this.recapListener.bind(this);
+    this.recapListenerFunc2 = this.recapListener.bind(this);
+    this.handleKeyDownFunc = this.handleKeyDown.bind(this);
+    this.handleKeyUpFunc = this.handleKeyUp.bind(this);
+    $(document).on("keydown", this.handleKeyDownFunc); 
+    $(document).on("keyup", this.handleKeyUpFunc);
+    $(window).on("keypress", this.handleKeyPress);
+    $("#piano").on("mousedown", this.recapListenerFunc);
+    $("#piano").on("touchstart", this.recapListenerFunc2);
   }
 
   n(a: string, b?: number): {note: Note, held: boolean} {
@@ -64,78 +86,81 @@ class KeyboardHandler {
   }
 
   handleKeyDown(evt: JQuery.KeyDownEvent) {
+	if (!this.capKeyboard) return;
     //console.log(evt);
     let code = parseInt(evt.keyCode as any); //! Deprecated - Hri7566
-    if (key_binding[code] !== undefined) {
-      let binding = key_binding[code];
+    if (this.key_binding[code] !== undefined) {
+      let binding = this.key_binding[code];
       if (!binding.held) {
         binding.held = true;
   
         let note = binding.note;
-        let octave = 1 + note.octave + transpose_octave;
+        let octave = 1 + note.octave + this.transpose_octave;
         if (evt.shiftKey) ++octave;
-        else if (capsLockKey || evt.ctrlKey) --octave;
+        else if (this.capsLockKey || evt.ctrlKey) --octave;
         let noteStr = note.note + octave;
-        let vol = velocityFromMouseY();
-        press(noteStr, vol);
+        let vol = this.velocityFromMouseY();
+        this.gInterface.keyboard.press(noteStr, vol);
       }
   
-      if (++gKeyboardSeq === 3) {
-        gKnowsYouCanUseKeyboard = true;
-        if (gKnowsYouCanUseKeyboardTimeout) clearTimeout(gKnowsYouCanUseKeyboardTimeout);
+      if (++this.gInterface.settings.gKeyboardSeq === 3) {
+        this.gInterface.settings.gKnowsYouCanUseKeyboard = true;
+        if (this.gInterface.settings.gKnowsYouCanUseKeyboardTimeout) clearTimeout(this.gInterface.settings.gKnowsYouCanUseKeyboardTimeout);
         if (localStorage) localStorage.knowsYouCanUseKeyboard = true;
-        if (gKnowsYouCanUseKeyboardNotification) gKnowsYouCanUseKeyboardNotification.close();
+        if (this.gInterface.settings.gKnowsYouCanUseKeyboardNotification) this.gInterface.settings.gKnowsYouCanUseKeyboardNotification.close();
       }
   
       evt.preventDefault();
       evt.stopPropagation();
       return false;
     } else if (code === 20) { // Caps Lock
-      capsLockKey = true;
+      this.capsLockKey = true;
       evt.preventDefault();
     } else if (code === 0x20) { // Space Bar
-      pressSustain();
+     this.gInterface.keyboard.pressSustain();
       evt.preventDefault();
-    } else if ((code === 38 || code === 39) && transpose_octave < 3) {
-      ++transpose_octave;
-    } else if ((code === 40 || code === 37) && transpose_octave > -2) {
-      --transpose_octave;
+    } else if ((code === 38 || code === 39) && this.transpose_octave < 3) {
+      ++this.transpose_octave;
+    } else if ((code === 40 || code === 37) && this.transpose_octave > -2) {
+      --this.transpose_octave;
     } else if (code === 9) { // Tab (don't tab away from the piano)
       evt.preventDefault();
     } else if (code === 8) { // Backspace (don't navigate Back)
-      gAutoSustain = !gAutoSustain;
+      this.gInterface.keyboard.gAutoSustain = !this.gInterface.keyboard.gAutoSustain;
       evt.preventDefault();
     }
   }
 
   handleKeyUp(evt: JQuery.KeyUpEvent) {
+	if (!this.capKeyboard) return;
     let code = parseInt(evt.keyCode as any); //! Also deprecated - Hri7566
-    if (key_binding[code] !== undefined) {
-      let binding = key_binding[code];
+    if (this.key_binding[code] !== undefined) {
+      let binding = this.key_binding[code];
       if (binding.held) {
         binding.held = false;
   
         let note = binding.note;
-        let octave = 1 + note.octave + transpose_octave;
+        let octave = 1 + note.octave + this.transpose_octave;
         if (evt.shiftKey) ++octave;
-        else if (capsLockKey || evt.ctrlKey) --octave;
+        else if (this.capsLockKey || evt.ctrlKey) --octave;
         let noteStr = note.note + octave;
-        release(noteStr);
+       this.gInterface.keyboard.release(noteStr);
       }
   
       evt.preventDefault();
       evt.stopPropagation();
       return false;
     } else if (code === 20) { // Caps Lock
-      capsLockKey = false;
+      this.capsLockKey = false;
       evt.preventDefault();
     } else if (code === 0x20) { // Space Bar
-      releaseSustain();
+      this.gInterface.keyboard.releaseSustain();
       evt.preventDefault();
     }
   }
 
   handleKeyPress(evt: JQuery.KeyPressEvent) {
+	if (!this.capKeyboard) return;
     evt.preventDefault();
     evt.stopPropagation();
     if (evt.keyCode === 27 || evt.keyCode === 13) {
@@ -145,26 +170,28 @@ class KeyboardHandler {
   }
 
   recapListener(evt: JQuery.MouseDownEvent | JQuery.TouchStartEvent) {
-    captureKeyboard();
+    this.captureKeyboard();
   }
 
   captureKeyboard() {
-    $("#piano").off("mousedown", recapListener);
-    $("#piano").off("touchstart", recapListener);
-    $(document).on("keydown", handleKeyDown); 
-    $(document).on("keyup", handleKeyUp);
-    $(window).on("keypress", handleKeyPress);
+	this.capKeyboard = true;
+    /*$("#piano").off("mousedown", this.recapListenerFunc); //old, inefficient way of handling things
+    $("#piano").off("touchstart", this.recapListenerFunc2);
+    $(document).on("keydown", this.handleKeyDownFunc); 
+    $(document).on("keyup", this.handleKeyUpFunc);
+    $(window).on("keypress", this.handleKeyPress);*/
   };
 
   releaseKeyboard() {
-    $(document).off("keydown", handleKeyDown);
-    $(document).off("keyup", handleKeyUp);
-    $(window).off("keypress", handleKeyPress);
-    $("#piano").on("mousedown", recapListener);
-    $("#piano").on("touchstart", recapListener);
+    this.capKeyboard = false;
+    /*$(document).off("keydown", this.handleKeyDownFunc);
+    $(document).off("keyup", this.handleKeyUpFunc);
+    $(window).off("keypress", this.handleKeyPress);
+    $("#piano").on("mousedown", this.recapListenerFunc);
+    $("#piano").on("touchstart", this.recapListenerFunc2);*/
   };
 
   velocityFromMouseY(): number {
-		return 0.1 + (my / 100) * 0.6;
+		return 0.1 + (this.gInterface.cursor.my / 100) * 0.6;
 	}
 }

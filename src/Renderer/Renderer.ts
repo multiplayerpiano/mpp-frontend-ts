@@ -1,17 +1,22 @@
 // Renderer classes
 
 ////////////////////////////////////////////////////////////////
-interface Blip {
+
+import { AudioEngineWeb } from "../AudioEngine/AudioEngineWeb";
+import { PianoKey } from "../Pianoctor/PianoKey";
+import * as $ from "jquery";
+
+export interface Blip {
   color: string;
   time: number;
 }
-interface PianoAPI {
+export interface PianoAPI {
   audio: AudioEngineWeb;
   keys: Record<string, PianoKey>;
   renderer: Renderer;
   rootElement: HTMLElement;
 }
-class Renderer {
+export class Renderer {
   piano: PianoAPI;
   width: number;
   height: number;

@@ -2,14 +2,21 @@
 
 ////////////////////////////////////////////////////////////////
 
-class Settings {
+import { MPP } from "..";
+import { Notification } from "../Interface/Notification";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
+export class Settings {
   gKeyboardSeq: number;
   gKnowsYouCanUseKeyboard: boolean;
   gKnowsYouCanUseKeyboardTimeout: number;
-  gKnowsYouCanUseKeyboardNotification: MPPNotification | undefined;
+  gKnowsYouCanUseKeyboardNotification: Notification | undefined;
   gHasBeenHereBefore: boolean;
+  gInterface: MultiplayerPianoClient;
 
-  constructor() {
+  constructor(gInterface: MultiplayerPianoClient) {
+    this.gInterface = gInterface;
     this.gKeyboardSeq = 0;
     this.gKnowsYouCanUseKeyboard = false;
     this.gKnowsYouCanUseKeyboardTimeout = 0;
@@ -20,7 +27,7 @@ class Settings {
     if (localStorage && localStorage.gKnowsYouCanUseKeyboard) this.gKnowsYouCanUseKeyboard = true;
     if (!this.gKnowsYouCanUseKeyboard) {
       this.gKnowsYouCanUseKeyboardTimeout = window.setTimeout(() => {
-        this.gKnowsYouCanUseKeyboardNotification = new MPPNotification({
+        this.gKnowsYouCanUseKeyboardNotification = new Notification({
           title: "Did you know!?!",
           text: "You can play the piano with your keyboard, too.  Try it!",
           target: "#piano",
@@ -32,10 +39,10 @@ class Settings {
   setAudioSettings() {
     if (window.localStorage) {
       if (localStorage.volume) {
-        volume_slider.value = localStorage.volume;
-        gPiano.audio.setVolume(localStorage.volume);
-        $("#volume-label").text("Volume: " + Math.floor(gPiano.audio.volume * 100) + "%");
-      } else localStorage.volume = gPiano.audio.volume;
+        this.gInterface.controlBarEvents.volume_slider.value = localStorage.volume;
+       this.gInterface.gPiano.audio.setVolume(localStorage.volume);
+        $("#volume-label").text("Volume: " + Math.floor(this.gInterface.gPiano.audio.volume * 100) + "%");
+      } else localStorage.volume =this.gInterface.gPiano.audio.volume;
     
       this.gHasBeenHereBefore = (localStorage.gHasBeenHereBefore || false);
       if (this.gHasBeenHereBefore) {}

@@ -1,12 +1,18 @@
-class SynthVoice {
+import { MPP } from "..";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+import { Synth } from "./Synth";
+
+export class SynthVoice {
   osc: OscillatorNode;
   gain: GainNode;
   synth: Synth;
+  gInterface: MultiplayerPianoClient;
   
-  constructor(synth: Synth, note_name: string, time: number) {
-    this.synth = synth;
-    let note_number = MIDI_KEY_NAMES.indexOf(note_name);
-    note_number = note_number + 9 - MIDI_TRANSPOSE;
+  constructor(gInterface: MultiplayerPianoClient, note_name: string, time: number) {
+    this.synth = gInterface.synth;
+    this.gInterface = gInterface;
+    let note_number = this.gInterface.midi.MIDI_KEY_NAMES.indexOf(note_name);
+    note_number = note_number + 9 - this.gInterface.midi.MIDI_TRANSPOSE;
     let freq = Math.pow(2, (note_number - 69) / 12) * 440.0;
     this.osc = this.synth.context.createOscillator();
     this.osc.type = this.synth.osc1_type;

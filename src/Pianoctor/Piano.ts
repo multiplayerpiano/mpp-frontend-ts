@@ -2,13 +2,30 @@
 
 ////////////////////////////////////////////////////////////////
 
-class Piano {
+import { AudioEngineWeb } from "../AudioEngine/AudioEngineWeb";
+import { Participant } from "../Client/Client";
+import { CanvasRenderer } from "../Renderer/CanvasRenderer";
+import { Synth } from "../Synth/Synth";
+import { PianoKey } from "./PianoKey";
+import * as $ from "jquery";
+import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
+
+interface PianoOptionsNode {
+  test_mode: "" | RegExpMatchArray | null;
+  gMidiOutTest: ((note_name: string, vel: number, delay_ms: number) => void) | undefined;
+  synth: Synth;
+  gInterface: MultiplayerPianoClient; //oh well
+}
+
+export class Piano {
   rootElement: HTMLElement;
   keys: Record<string, PianoKey>;
   renderer: CanvasRenderer;
   audio: AudioEngineWeb;
+  options: PianoOptionsNode;
   
-  constructor(rootElement: HTMLElement) {
+  constructor(rootElement: HTMLElement, options: PianoOptionsNode) {
+    this.options = options;
     let piano = this;
     piano.rootElement = rootElement;
     piano.keys = {};
@@ -29,7 +46,7 @@ class Piano {
         ++white_spatial;
       }
     }
-    if (test_mode) {
+    if (options.test_mode) {
       addKey("c", 2);
     } else {
       addKey("a", -1);
@@ -45,7 +62,7 @@ class Piano {
     }
 
 
-    this.renderer = new CanvasRenderer().init(this);
+    this.renderer = new CanvasRenderer(this.options.gInterface).init(this);
 
     window.addEventListener("resize", function () {
       piano.renderer.resize();
@@ -53,14 +70,14 @@ class Piano {
 
 
     window.AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext || undefined;
-    this.audio = new AudioEngineWeb().init();
+    this.audio = new AudioEngineWeb(this.options.gInterface).init();
   }
   
   play(note: string, vol: number, participant: Participant, delay_ms: number) {
     if (!this.keys.hasOwnProperty(note) || !participant) return;
     let key = this.keys[note];
     if (key.loaded) this.audio.play(key.note, vol, delay_ms, participant.id!);
-    if (gMidiOutTest) gMidiOutTest(key.note, vol * 100, delay_ms);
+    if (this.options.gMidiOutTest) this.options.gMidiOutTest(key.note, vol * 100, delay_ms);
     let self = this;
     setTimeout(function() {
       self.renderer.visualize(key, participant.color!);
@@ -77,6 +94,6 @@ class Piano {
     if (!this.keys.hasOwnProperty(note)) return;
     let key = this.keys[note];
     if (key.loaded) this.audio.stop(key.note, delay_ms, participant.id!);
-    if (gMidiOutTest) gMidiOutTest(key.note, 0, delay_ms);
+    if (this.options.gMidiOutTest) this.options.gMidiOutTest(key.note, 0, delay_ms);
   }
 }

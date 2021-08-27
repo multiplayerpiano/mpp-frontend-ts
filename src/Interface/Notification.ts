@@ -2,7 +2,10 @@
 
 ////////////////////////////////////////////////////////////////
 
-interface MPPNotificationInput {
+import { EventEmitter } from "events";
+import * as $ from "jquery";
+
+export interface NotificationInput {
 	id?: string,
 	title?: string,
 	text?: string,
@@ -12,7 +15,7 @@ interface MPPNotificationInput {
 	class?: string;
 }
 
-class MPPNotification extends EventEmitter {
+export class Notification extends EventEmitter {
   id: string;
   title: string;
   text: string;
@@ -21,8 +24,9 @@ class MPPNotification extends EventEmitter {
   duration: number;
   domElement: JQuery<HTMLElement>;
   class: string;
+  onResizeEventFunc: () => void;
 
-  constructor(par: MPPNotificationInput = {}) {
+  constructor(par: NotificationInput = {}) {
     super();
 
     this.id = "Notification-" + (par.id || Math.random());
@@ -32,6 +36,7 @@ class MPPNotification extends EventEmitter {
     this.target = $(par.target || "#piano");
     this.duration = par.duration || 30000;
     this["class"] = par["class"] || "classic";
+    this.onResizeEventFunc = this.onresize.bind(this);
 
     let self = this;
     let eles = $("#" + this.id);
@@ -53,7 +58,7 @@ class MPPNotification extends EventEmitter {
     document.body.appendChild(this.domElement.get(0));
 
     this.position();
-    window.addEventListener("resize", this.onresize);
+    window.addEventListener("resize", this.onResizeEventFunc);
 
     this.domElement.find(".x").click(function() {
       self.close();
@@ -87,7 +92,7 @@ class MPPNotification extends EventEmitter {
 
   close() {
     let self = this;
-    window.removeEventListener("resize", this.onresize);
+    window.removeEventListener("resize", this.onResizeEventFunc);
     this.domElement.fadeOut(500, function() {
       self.domElement.remove();
       self.emit("close");
