@@ -4,4 +4,8 @@ node_modules
 
 # TSC
 dist/js/
+
+# CSS
+dist/css/
+
 .github

@@ -1,4 +1,4 @@
-const path = require('path');
+const { resolve } = require('path');
 
 module.exports = {
   entry: './src/index.ts',
@@ -13,6 +13,7 @@ module.exports = {
       {
         test: /sass\/\.s[ac]ss$/i,
         use: [
+          'style-loader',
           'css-loader',
           'sass-loader'
         ]
@@ -24,6 +25,6 @@ module.exports = {
   },
   output: {
     filename: 'script.js',
-    path: path.resolve(__dirname, 'dist/js'),
+    path: resolve(__dirname, 'dist/js'),
   },
 };
