@@ -1,75 +1,73 @@
-/* TODO: This needs to be seriously updated */
-/* test */
 * {
-    image-rendering: pixelated;
-    margin: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+	image-rendering: pixelated;
+	margin: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
 }
 
 html,
 body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font: 20pt verdana, "DejaVu Sans", sans-serif;
-    color: white;
-    text-shadow: #444 1px 1px;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	font: 20pt verdana, "DejaVu Sans", sans-serif;
+	color: white;
+	text-shadow: #444 1px 1px;
 }
 
 body {
-    position: absolute;
+	position: absolute;
 	background: #3b5054;
-    /* Old browsers */
-    background: -moz-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
-    /* FF3.6+ */
-    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #ecfafd), color-stop(100%, #c5d5d8));
-    /* Chrome,Safari4+ */
-    background: -webkit-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
-    /* Chrome10+,Safari5.1+ */
-    background: -o-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
-    /* Opera 12+ */
-    background: -ms-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
-    /* IE10+ */
-    background: radial-gradient(ellipse at center, #ecfafd 0%, #c5d5d8 100%);
-    /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ecfafd', endColorstr='#c5d5d8', GradientType=1);
-    /* IE6-9 fallback on horizontal gradient */
+	/* Old browsers */
+	background: -moz-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
+	/* FF3.6+ */
+	background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #ecfafd), color-stop(100%, #c5d5d8));
+	/* Chrome,Safari4+ */
+	background: -webkit-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
+	/* Chrome10+,Safari5.1+ */
+	background: -o-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
+	/* Opera 12+ */
+	background: -ms-radial-gradient(center, ellipse cover, #ecfafd 0%, #c5d5d8 100%);
+	/* IE10+ */
+	background: radial-gradient(ellipse at center, #ecfafd 0%, #c5d5d8 100%);
+	/* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ecfafd', endColorstr='#c5d5d8', GradientType=1);
+	/* IE6-9 fallback on horizontal gradient */
 	transition: background 1000ms linear;
-    -webkit-transition: background 1000ms linear;
+	-webkit-transition: background 1000ms linear;
 }
 
 a {
-    cursor: pointer;
-    color: #f46;
-    transition: color 0.25s;
+	cursor: pointer;
+	color: #f46;
+	transition: color 0.25s;
 
 	&:hover {
 		color: #e05;
-    	transition: color 0.25s;
+		transition: color 0.25s;
 	}
 }
 
 .link {
-    text-decoration: underline;
-    cursor: pointer;
-    color: #ffee00;
+	text-decoration: underline;
+	cursor: pointer;
+	color: #ffee00;
 }
 
 table {
-    border: 0;
-    padding: 0;
-    margin: 0;
+	border: 0;
+	padding: 0;
+	margin: 0;
 }
 
 #names {
-    position: fixed;
-    top: 4px;
-    left: 4px;
-    font-size: 12px;
-    width: 80%;
+	position: fixed;
+	top: 4px;
+	left: 4px;
+	font-size: 12px;
+	width: 80%;
 
 	.name {
 		float: left;
@@ -101,7 +99,7 @@ table {
 
 		&.play {
 			transform: translateY(-4px);
-    		-webkit-transform: translateY(-4px);
+			-webkit-transform: translateY(-4px);
 		}
 
 		&.muted-notes {
@@ -131,12 +129,12 @@ table {
 }
 
 #piano {
-    width: 95%;
-    height: 20%;
-    margin: auto;
-    position: relative;
-    overflow: hidden;
-    padding-left: 1%;
+	width: 95%;
+	height: 20%;
+	margin: auto;
+	position: relative;
+	overflow: hidden;
+	padding-left: 1%;
 
 	.key {
 		float: left;
@@ -159,7 +157,8 @@ table {
 		padding: 0px;
 		overflow: hidden;
 
-		&.c, &.f {
+		&.c,
+		&.f {
 			margin-left: 0;
 		}
 
@@ -185,37 +184,37 @@ table {
 }
 
 .ease-out {
-    transition: left 0.1s ease-out;
-    -webkit-transition: left 0.1s ease-out;
-    -moz-transition: left 0.1s ease-out;
-    -o-transition: left 0.1s ease-out;
+	transition: left 0.1s ease-out;
+	-webkit-transition: left 0.1s ease-out;
+	-moz-transition: left 0.1s ease-out;
+	-o-transition: left 0.1s ease-out;
 }
 
 .ease-in {
-    transition: left 0.1s ease-in;
-    -webkit-transition: left 0.1s ease-in;
-    -moz-transition: left 0.1s ease-in;
-    -o-transition: left 0.1s ease-in;
+	transition: left 0.1s ease-in;
+	-webkit-transition: left 0.1s ease-in;
+	-moz-transition: left 0.1s ease-in;
+	-o-transition: left 0.1s ease-in;
 }
 
 .slide-left {
-    left: -100%;
+	left: -100%;
 }
 
 .slide-right {
-    left: 100%;
+	left: 100%;
 }
 
 .cursor {
-    width: 16px;
-    height: 24px;
-    background: url('img/cursor.png');
-    position: absolute;
-    pointer-events: none;
-    margin-left: -2px;
-    margin-top: -2px;
-    left: 200%;
-    top: 100%;
+	width: 16px;
+	height: 24px;
+	background: url('img/cursor.png');
+	position: absolute;
+	pointer-events: none;
+	margin-left: -2px;
+	margin-top: -2px;
+	left: 200%;
+	top: 100%;
 
 	.name {
 		display: inline;
@@ -242,25 +241,26 @@ table {
 		left: 0px;
 	}
 
-	transition: top 100ms, left 100ms;
+	transition: top 100ms,
+	left 100ms;
 }
 
 /* .cursor .spotlight { display: none; position: relative; left: -14px; top: -9px; width: 32px; height: 32px;
 	 border: 4px solid white; -webkit-border-radius: 100%; } */
 
 .participant-menu {
-    display: none;
-    position: fixed;
-    background: black;
-    width: 150px;
-    font-size: 12px;
-    padding: 0px;
-    margin: 0px;
-    border-radius: 2px;
+	display: none;
+	position: fixed;
+	background: black;
+	width: 150px;
+	font-size: 12px;
+	padding: 0px;
+	margin: 0px;
+	border-radius: 2px;
 
 	&:last-child .menu-item:hover {
 		border-bottom-left-radius: inherit;
-    	border-bottom-right-radius: inherit;
+		border-bottom-right-radius: inherit;
 	}
 
 	.info {
@@ -276,7 +276,7 @@ table {
 
 		&:hover {
 			opacity: 1;
-    		transition: opacity 0.2s ease-out;
+			transition: opacity 0.2s ease-out;
 		}
 	}
 
@@ -297,28 +297,28 @@ table {
 }
 
 #crown {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: url('img/crown.png') no-repeat;
-    cursor: pointer;
-    font-size: 10px;
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	background: url('img/crown.png') no-repeat;
+	cursor: pointer;
+	font-size: 10px;
 
-	span  {
+	span {
 		margin-left: 16px;
-    	margin-top: 2px;
+		margin-top: 2px;
 	}
 }
 
 #room-notice {
-    position: fixed;
-    top: 20%;
-    width: 100%;
-    text-align: center;
-    opacity: 0.5;
-    font-size: 20px;
-    pointer-events: none;
-    display: none;
+	position: fixed;
+	top: 20%;
+	width: 100%;
+	text-align: center;
+	opacity: 0.5;
+	font-size: 20px;
+	pointer-events: none;
+	display: none;
 
 	p {
 		margin: 1em;
@@ -326,32 +326,32 @@ table {
 }
 
 #bottom {
-    position: fixed;
-    bottom: 0px;
-    left: 0px;
-    width: 100%;
-    height: 60px;
-    background: #9a9;
-    margin-bottom: 3px;
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	height: 60px;
+	background: #9a9;
+	margin-bottom: 3px;
 }
 
 #room,
 #room * {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 #room {
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding: 5px;
-    width: 240px;
-    height: 12px;
-    background: #898;
-    border: 1px solid #aba;
-    cursor: pointer;
-    margin: 4px 24px;
-    font-size: 12px;
+	position: absolute;
+	left: 0;
+	top: 0;
+	padding: 5px;
+	width: 240px;
+	height: 12px;
+	background: #898;
+	border: 1px solid #aba;
+	cursor: pointer;
+	margin: 4px 24px;
+	font-size: 12px;
 
 	.info {
 		white-space: nowrap;
@@ -406,6 +406,7 @@ table {
 		background: #898;
 		border: 1px solid #aba;
 		max-height: 600px;
+
 		&.more>div {
 			margin: 0;
 			padding: 3px 6px 0px 6px;
@@ -428,19 +429,19 @@ table {
 }
 
 .ugly-button {
-    height: 12px;
-    font-size: 12px;
-    background: rgba(170, 187, 170, 0.35);
-    border: 1px solid #898;
-    padding: 5px;
-    cursor: pointer;
-    line-height: 12px;
-    border-radius: 3px;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    width: 100px;
-    overflow: hidden;
-    white-space: nowrap;
+	height: 12px;
+	font-size: 12px;
+	background: rgba(170, 187, 170, 0.35);
+	border: 1px solid #898;
+	padding: 5px;
+	cursor: pointer;
+	line-height: 12px;
+	border-radius: 3px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	width: 100px;
+	overflow: hidden;
+	white-space: nowrap;
 
 	&:hover {
 		background: rgba(187, 204, 170, 0.35)
@@ -452,75 +453,75 @@ table {
 }
 
 #new-room-btn {
-    position: absolute;
-    left: 300px;
-    top: 4px;
+	position: absolute;
+	left: 300px;
+	top: 4px;
 }
 
 #play-alone-btn {
-    position: absolute;
-    left: 420px;
-    top: 4px;
+	position: absolute;
+	left: 420px;
+	top: 4px;
 }
 
 #sound-btn {
-    position: absolute;
-    left: 540px;
-    top: 4px;
+	position: absolute;
+	left: 540px;
+	top: 4px;
 }
 
 #room-settings-btn {
-    position: absolute;
-    left: 660px;
-    top: 4px;
-    display: none;
+	position: absolute;
+	left: 660px;
+	top: 4px;
+	display: none;
 }
 
 #midi-btn {
-    position: absolute;
-    left: 300px;
-    top: 32px;
+	position: absolute;
+	left: 300px;
+	top: 32px;
 }
 
 #record-btn {
-    position: absolute;
-    left: 420px;
-    top: 32px;
+	position: absolute;
+	left: 420px;
+	top: 32px;
 }
 
 #synth-btn {
-    position: absolute;
-    left: 540px;
-    top: 32px;
+	position: absolute;
+	left: 540px;
+	top: 32px;
 }
 
 #tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: #000;
-    color: #fff;
-    font-size: 10px;
+	position: absolute;
+	pointer-events: none;
+	background: #000;
+	color: #fff;
+	font-size: 10px;
 }
 
 .knob {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 .switched-on {
-    background: #ff8;
+	background: #ff8;
 }
 
 #status {
-    position: absolute;
-    left: 0px;
-    bottom: 10px;
-    width: 320px;
-    height: 20px;
-    padding: 5px;
-    font-size: 20px;
-    font-weight: 800;
-    line-height: 20px;
-    pointer-events: none;
+	position: absolute;
+	left: 0px;
+	bottom: 10px;
+	width: 320px;
+	height: 20px;
+	padding: 5px;
+	font-size: 20px;
+	font-weight: 800;
+	line-height: 20px;
+	pointer-events: none;
 
 	.number {
 		font-size: 35px;
@@ -528,38 +529,38 @@ table {
 }
 
 #volume {
-    position: absolute;
-    right: 20px;
-    top: 0px;
-    width: 100px;
-    height: 40px;
-    margin: 10px;
+	position: absolute;
+	right: 20px;
+	top: 0px;
+	width: 100px;
+	height: 40px;
+	margin: 10px;
 }
 
 #volume-slider {
-    width: 100%;
-    height: 100%;
-    background: url("img/volume2.png") no-repeat;
-    background-position: 50% 50%;
-    -webkit-appearance: none;
+	width: 100%;
+	height: 100%;
+	background: url("img/volume2.png") no-repeat;
+	background-position: 50% 50%;
+	-webkit-appearance: none;
 }
 
 #volume-label {
-    position: absolute;
-    right: 30px;
-    bottom: 10px;
-    font-size: 10px;
-    color: #ccc;
+	position: absolute;
+	right: 30px;
+	bottom: 10px;
+	font-size: 10px;
+	color: #ccc;
 }
 
 #banner {
-    width: 468px;
-    height: 60px;
-    position: absolute;
-    right: 0;
-    top: 0;
-    font-size: 18px;
-    display: none;
+	width: 468px;
+	height: 60px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	font-size: 18px;
+	display: none;
 
 	a {
 		color: #ffdd00;
@@ -567,12 +568,12 @@ table {
 }
 
 #quota {
-    width: 100%;
-    height: 3px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    background: #f80;
+	width: 100%;
+	height: 3px;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	background: #f80;
 
 	.value {
 		width: 100%;
@@ -583,27 +584,27 @@ table {
 }
 
 .relative {
-    position: relative;
-    width: 100%;
-    height: 100%;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
 .notification {
-    position: absolute;
+	position: absolute;
 }
 
 .notification-body {
-    background: #fea;
-    border-color: #fea;
-    padding: 10px;
-    position: relative;
-    left: 0;
-    top: 0;
-    color: #444;
-    font-size: 12px;
-    text-shadow: #ccc 1px 1px;
-    border-radius: 6px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.25);
+	background: #fea;
+	border-color: #fea;
+	padding: 10px;
+	position: relative;
+	left: 0;
+	top: 0;
+	color: #444;
+	font-size: 12px;
+	text-shadow: #ccc 1px 1px;
+	border-radius: 6px;
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.25);
 
 	&:after {
 		content: "";
@@ -619,11 +620,11 @@ table {
 }
 
 .title {
-    border-bottom: 1px solid #f84;
-    font-size: 16px;
-    font-weight: bold;
-    padding-bottom: 5px;
-    margin-bottom: 8px;
+	border-bottom: 1px solid #f84;
+	font-size: 16px;
+	font-weight: bold;
+	padding-bottom: 5px;
+	margin-bottom: 8px;
 }
 
 .notification {
@@ -730,12 +731,12 @@ table {
 }
 
 #modal {
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    left: 0;
-    top: 0;
-    display: none;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	left: 0;
+	top: 0;
+	display: none;
 
 	.bg {
 		width: 100%;
@@ -750,34 +751,34 @@ table {
 
 #modal,
 #modal * {
-    user-select: text;
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
+	user-select: text;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
 }
 
 .dialog {
-    background: #cdc;
-    width: 400px;
-    height: 100px;
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    margin-left: -200px;
-    margin-top: -50px;
-    padding: 10px;
-    border: 1px solid #9a9;
-    overflow: hidden;
-    border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    box-shadow: 0px 0px 8px #000;
-    -webkit-box-shadow: 0px 0px 8px #000;
-    -moz-box-shadow: 0px 0px 8px #000;
+	background: #cdc;
+	width: 400px;
+	height: 100px;
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	margin-left: -200px;
+	margin-top: -50px;
+	padding: 10px;
+	border: 1px solid #9a9;
+	overflow: hidden;
+	border-radius: 4px;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	box-shadow: 0px 0px 8px #000;
+	-webkit-box-shadow: 0px 0px 8px #000;
+	-moz-box-shadow: 0px 0px 8px #000;
 
 	p {
 		margin: 10px;
-    	font-size: 20px;
+		font-size: 20px;
 	}
 
 	input {
@@ -824,22 +825,22 @@ table {
 }
 
 #room-settings {
-    height: 400px;
-    margin-top: -200px;
+	height: 400px;
+	margin-top: -200px;
 }
 
 #chat {
-    display: none;
-    opacity: 1;
+	display: none;
+	opacity: 1;
 
 	position: fixed;
-    bottom: 64px;
-    left: 0;
-    width: 100%;
-    vertical-align: bottom;
-    font-size: 13px;
-    color: white;
-    text-shadow: #888 1px 1px;
+	bottom: 64px;
+	left: 0;
+	width: 100%;
+	vertical-align: bottom;
+	font-size: 13px;
+	color: white;
+	text-shadow: #888 1px 1px;
 
 	ul {
 		list-style: none;
@@ -850,11 +851,11 @@ table {
 
 	li {
 		padding: 2px;
-	    opacity: 0;
+		opacity: 0;
 
 		.name {
 			font-weight: bold;
-    		margin-right: 10px;
+			margin-right: 10px;
 		}
 
 		.message {
@@ -887,7 +888,7 @@ table {
 
 		&:focus {
 			outline: none;
-    		border: 1px solid #ff8;
+			border: 1px solid #ff8;
 		}
 	}
 
@@ -914,18 +915,18 @@ table {
 
 #chat,
 #chat * {
-    user-select: text;
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
+	user-select: text;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
 }
 
 #social {
-    position: fixed;
-    top: 4px;
-    right: 6px;
-    width: 80px;
-    font-size: 12px;
+	position: fixed;
+	top: 4px;
+	right: 6px;
+	width: 80px;
+	font-size: 12px;
 
 	#more-button {
 		margin-top: 4px;
@@ -950,34 +951,34 @@ table {
 
 	.fb-like {
 		position: absolute;
-    	right: 0px;
+		right: 0px;
 	}
 
 	#inclinations {
 		margin-top: 50px;
-    	margin-bottom: 20px;
+		margin-bottom: 20px;
 	}
 }
 
 #more {
-    display: none;
-    width: 1250px;
-    margin: 0 auto;
-    padding: 0px;
-    border-radius: 10px;
-    font-size: 15px;
-    border: 1px solid #b0c0c0;
-    color: #566;
-    background: #bcc;
-    box-shadow: 1px 1px 8px #899;
-    position: fixed;
-    top: 50px;
-    right: 50px;
-    text-shadow: none;
+	display: none;
+	width: 1250px;
+	margin: 0 auto;
+	padding: 0px;
+	border-radius: 10px;
+	font-size: 15px;
+	border: 1px solid #b0c0c0;
+	color: #566;
+	background: #bcc;
+	box-shadow: 1px 1px 8px #899;
+	position: fixed;
+	top: 50px;
+	right: 50px;
+	text-shadow: none;
 
 	div {
 		margin: 0px;
-    	padding: 0px;
+		padding: 0px;
 	}
 
 	.items {
@@ -991,7 +992,7 @@ table {
 
 			&:hover {
 				background: #d0e0e0;
-    			transition: background 0.25s;
+				transition: background 0.25s;
 			}
 
 			.content {
@@ -1002,7 +1003,7 @@ table {
 
 				p {
 					margin-top: 1em;
-    				margin-bottom: 1em;
+					margin-bottom: 1em;
 				}
 			}
 		}
@@ -1020,134 +1021,134 @@ table {
 }
 
 #email:before {
-    content: url('img/envelope.png');
-    margin: 4px;
+	content: url('img/envelope.png');
+	margin: 4px;
 }
 
 
 #room-notice {
-    z-index: 1;
+	z-index: 1;
 }
 
 #cursors {
-    z-index: 2;
+	z-index: 2;
 }
 
 #chat {
-    z-index: 100;
+	z-index: 100;
 }
 
 #social {
-    z-index: 200;
+	z-index: 200;
 }
 
 #names {
-    z-index: 300;
+	z-index: 300;
 }
 
 #piano {
-    z-index: 400;
+	z-index: 400;
 }
 
 #piano .key {
-    z-index: 401;
+	z-index: 401;
 }
 
 #piano .key.sharp {
-    z-index: 402;
+	z-index: 402;
 }
 
 #bottom {
-    z-index: 500;
+	z-index: 500;
 }
 
 #crown {
-    z-index: 600;
+	z-index: 600;
 }
 
 .notification {
-    z-index: 700;
+	z-index: 700;
 }
 
 #cursors .cursor {
-    z-index: 800;
+	z-index: 800;
 }
 
 #chat.chatting {
-    z-index: 900;
+	z-index: 900;
 }
 
 .participant-menu {
-    z-index: 1000;
+	z-index: 1000;
 }
 
 #modal {
-    z-index: 10000;
+	z-index: 10000;
 }
 
 #tooltip {
-    z-index: 20000;
+	z-index: 20000;
 }
 
 
 .clear {
-    clear: both;
+	clear: both;
 }
 
 .spin {
-    animation: spin 1s linear infinite;
-    -webkit-animation: spin 1s linear infinite;
-    -moz-animation: spin 1s linear infinite;
-    -o-animation: spin 1s linear infinite;
-    -ms-animation: spin 1s linear infinite;
+	animation: spin 1s linear infinite;
+	-webkit-animation: spin 1s linear infinite;
+	-moz-animation: spin 1s linear infinite;
+	-o-animation: spin 1s linear infinite;
+	-ms-animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
 	0% {
-        transform: rotate(0deg);
-    }
+		transform: rotate(0deg);
+	}
 
-    100% {
-        transform: rotate(360deg);
-    }
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 @-webkit-keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-    }
+	0% {
+		-webkit-transform: rotate(0deg);
+	}
 
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+	100% {
+		-webkit-transform: rotate(360deg);
+	}
 }
 
 @-moz-keyframes spin {
-    0% {
-        -moz-transform: rotate(0deg);
-    }
+	0% {
+		-moz-transform: rotate(0deg);
+	}
 
-    100% {
-        -moz-transform: rotate(360deg);
-    }
+	100% {
+		-moz-transform: rotate(360deg);
+	}
 }
 
 @-o-keyframes spin {
-    0% {
-        -o-transform: rotate(0deg);
-    }
+	0% {
+		-o-transform: rotate(0deg);
+	}
 
-    100% {
-        -o-transform: rotate(360deg);
-    }
+	100% {
+		-o-transform: rotate(360deg);
+	}
 }
 
 @-ms-keyframes spin {
-    0% {
-        -ms-transform: rotate(0deg);
-    }
+	0% {
+		-ms-transform: rotate(0deg);
+	}
 
-    100% {
-        -ms-transform: rotate(360deg);
-    }
+	100% {
+		-ms-transform: rotate(360deg);
+	}
 }
