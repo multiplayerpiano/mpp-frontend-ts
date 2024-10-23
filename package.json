@@ -1,8 +1,8 @@
 {
   "name": "mpp-client-ts",
-  "version": "1.0.0",
-  "description": "A client for mpp written in TypeScript",
-  "private": true,
+  "version": "2.0.0",
+  "description": "A client for Multiplayer Piano written in TypeScript",
+  "private": false,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build-webpack && npm run build-sass",
@@ -18,17 +18,17 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "jquery": "^3.6.0",
-    "ts-loader": "^9.2.3",
-    "typescript": "^4.1.5"
+    "@types/node": "^22.7.9",
+    "jquery": "^3.7.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^4.9.5"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.5",
-    "@types/webmidi": "^2.0.4",
-    "css-loader": "^5.2.6",
-    "dart-sass": "^1.25.0",
-    "sass": "^1.38.1",
-    "webpack": "^5.39.0",
-    "webpack-cli": "^4.7.2"
+    "@types/jquery": "^3.5.32",
+    "@types/webmidi": "^2.1.0",
+    "css-loader": "^5.2.7",
+    "sass": "^1.80.3",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^4.10.0"
   }
 }

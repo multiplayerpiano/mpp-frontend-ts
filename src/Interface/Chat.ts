@@ -3,7 +3,12 @@
 ////////////////////////////////////////////////////////////////
 
 import { MPP } from "..";
-import { ChatMessage, InMessageA, InMessageC, InMessageCh } from "../Client/Client";
+import {
+  ChatMessage,
+  InMessageA,
+  InMessageC,
+  InMessageCh,
+} from "../Client/Client";
 import * as $ from "jquery";
 import { MultiplayerPianoClient } from "../MultiplayerPianoClient";
 
@@ -28,24 +33,26 @@ export class Chat {
   }
 
   scrollToBottom() {
-    let ele = $("#chat ul").get(0);
+    let ele = $("#chat ul").get(0) as HTMLUListElement;
     ele.scrollTop = ele.scrollHeight - ele.clientHeight;
   }
 
   blur() {
     if ($("#chat").hasClass("chatting")) {
-      $("#chat input").get(0).blur();
+      ($("#chat input").get(0) as any).blur();
       $("#chat").removeClass("chatting");
       this.gInterface.chat.scrollToBottom();
       this.gInterface.keyboardHandler.captureKeyboard();
     }
   }
-  
+
   send(message: string) {
-    this.gInterface.clientManager.gClient.sendArray([{
-      m: "a",
-      message: message
-    }]);
+    this.gInterface.clientManager.gClient.sendArray([
+      {
+        m: "a",
+        message: message,
+      },
+    ]);
   }
 
   receive(msg: ChatMessage) {
@@ -56,12 +63,11 @@ export class Chat {
     li.css("color", msg.p.color || "white");
     li.find(".message").text(msg.a);
 
-    
     $("#chat ul").append(li);
 
     let eles = $("#chat ul li").get() as HTMLElement[];
     for (let i = 1; i <= 50 && i <= eles.length; i++) {
-      eles[eles.length - i].style.opacity = String(1.0 - (i * 0.03));
+      eles[eles.length - i].style.opacity = String(1.0 - i * 0.03);
     }
     if (eles.length > 50) {
       eles[0].style.display = "none";
@@ -74,7 +80,7 @@ export class Chat {
     if (!$("#chat").hasClass("chatting")) {
       this.gInterface.chat.scrollToBottom();
     } else {
-      let ele = $("#chat ul").get(0);
+      let ele = $("#chat ul").get(0) as HTMLUListElement;
       if (ele.scrollTop > ele.scrollHeight - ele.offsetHeight - 50)
         this.gInterface.chat.scrollToBottom();
     }
@@ -99,10 +105,10 @@ export class Chat {
     this.gInterface.clientManager.gClient.on("a", (msg: InMessageA) => {
       this.receive(msg);
     });
-  } 
+  }
 
   bindChatEventListeners() {
-    $("#chat input").on("focus", evt => {
+    $("#chat input").on("focus", (evt) => {
       this.gInterface.keyboardHandler.releaseKeyboard();
       $("#chat").addClass("chatting");
       this.gInterface.chat.scrollToBottom();
@@ -112,12 +118,12 @@ export class Chat {
       $("#chat").removeClass("chatting");
       chat.scrollToBottom();
     });*/
-    $(document).mousedown( evt => {
+    $(document).mousedown((evt) => {
       if (!($("#chat").has(evt.target as unknown as Element).length > 0)) {
         this.gInterface.chat.blur();
       }
     });
-    document.addEventListener("touchstart", event => {
+    document.addEventListener("touchstart", (event) => {
       for (let i in event.changedTouches) {
         let touch = event.changedTouches[i];
         if (!($("#chat").has(touch.target as unknown as Element).length > 0)) {
@@ -125,7 +131,8 @@ export class Chat {
         }
       }
     });
-    $(document).on("keydown", evt => { // TODO keycode deprecations - Hri7566
+    $(document).on("keydown", (evt) => {
+      // TODO keycode deprecations - Hri7566
       if ($("#chat").hasClass("chatting")) {
         if (evt.keyCode === 27) {
           this.gInterface.chat.blur();
@@ -134,23 +141,26 @@ export class Chat {
         } else if (evt.keyCode === 13) {
           $("#chat input").focus();
         }
-      } else if (!this.gInterface.modal.gModal && (evt.keyCode === 27 || evt.keyCode === 13)) {
+      } else if (
+        !this.gInterface.modal.gModal &&
+        (evt.keyCode === 27 || evt.keyCode === 13)
+      ) {
         $("#chat input").focus();
       }
     });
     let self = this;
-    $("#chat input").on("keydown", function(evt) {
+    $("#chat input").on("keydown", function (evt) {
       if (evt.keyCode === 13) {
         if (self.gInterface.clientManager.gClient.isConnected()) {
           let message = $(this).val() as string;
           if (message.length === 0) {
-            setTimeout(function() {
+            setTimeout(function () {
               self.gInterface.chat.blur();
             }, 100);
           } else if (message.length <= 512) {
             self.gInterface.chat.send(message);
             $(this).val("");
-            setTimeout(function() {
+            setTimeout(function () {
               self.gInterface.chat.blur();
             }, 100);
           }
