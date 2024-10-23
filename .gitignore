@@ -1,13 +1,4 @@
-/dist
-
-# Node
 node_modules
-.env
-
-# TSC
-dist/js/
-
-# CSS
-dist/css/
-
+/.env
+/dist
 .github

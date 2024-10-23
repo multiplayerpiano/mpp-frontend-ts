@@ -1,6 +1,6 @@
-# mpp-ts
+# mpp-frontend-ts
 
-Multiplayerpiano.com files in typescript
+MPP frontend rewritten in TypeScript
 
 ### Roadmap
 * Kill JQuery
